@@ -4,6 +4,8 @@ import ast, cmath, copy, fractions, functools, itertools, locale, math, mpmath, 
 stack = []
 mpmath.mp.dps = 10000
 last_op = 'N/A'
+safe_mode = False
+debug_mode = False
 
 
 """
@@ -36,6 +38,37 @@ class Block(object):
 
     def run(self):
         return run(self.block)
+
+
+class Regex(object):
+    regex_flags = {
+        'i': re.IGNORECASE,
+        'a': re.ASCII,
+        'm': re.MULTILINE
+    }
+
+    def __init__(self, pattern, *flags):
+        global regex_flags
+        if type(pattern) == Regex:
+            self.pattern = str(pattern)
+            self.flags = pattern.flags
+        else:
+            flag_list = []
+            for flag in flags:
+                flag_list.append(flag)
+            if '`' in pattern:
+                for flag in pattern.split('`')[0]:
+                    flag_list.append(regex_flags[flag])
+                self.pattern = pattern.split('`')[1]
+            else:
+                self.pattern = pattern
+            self.flags = flag_list
+
+    def __str__(self):
+        return self.pattern
+
+    def flags(self):
+        return self.flags
 
 
 class InvalidOperatorError(Exception):
@@ -106,7 +139,11 @@ def is_block(obj):
 
 
 def push(x):
-    if x is not None:
+    if x is True:
+        stack.append(1)
+    elif x is False:
+        stack.append(0)
+    elif x is not None:
         stack.append(x)
 
 
@@ -181,6 +218,10 @@ def split_code(code):
                         line_stack.append(block)
                         block = ''
                 index += 1
+            elif line[index] == '®':
+                open_literals.append('®')
+                block += '®'
+                index += 1
             elif line[index] == '"':
                 open_literals.append('"')
                 block += '"'
@@ -236,7 +277,11 @@ def run_temp_stack(code):
     code_stack = split_code(code)[0]
 
     def push_temp_stack(x):
-        if x is not None:
+        if x is True:
+            stack.append(1)
+        elif x is False:
+            stack.append(0)
+        elif x is not None:
             temp_stack.append(x)
 
     def pop_temp_stack():
@@ -284,11 +329,13 @@ def run_temp_stack(code):
                 push_temp_stack(run_temp_stack(code_stack[index][1:len(code_stack[index]) - 1]))
             elif code_stack[index][0] == '{':
                 push_temp_stack(Block(code_stack[index]))
+            elif code_stack[index][0] == '®':
+                push_temp_stack(Regex(code_stack[index][1:len(code_stack[index]) - 1]))
             index += 1
     return temp_stack
 
 
-def run(code):
+def run(code, dump=False):
     global last_op
     code_stack = split_code(code)
     current_line = 0
@@ -304,7 +351,6 @@ def run(code):
             else:
                 try:
                     last_op = code_stack[current_line][index]
-                    print(code_stack[current_line][index])
                     push(run_op(code_stack[current_line][index]))
                 except KeyError:
                     raise InvalidOperatorError(code_stack[current_line][index])
@@ -318,9 +364,12 @@ def run(code):
                 push(run_temp_stack(code_stack[current_line][index][1:len(code_stack[current_line][index])-1]))
             elif code_stack[current_line][index][0] == '{':
                 push(Block(code_stack[current_line][index]))
+            elif code_stack[current_line][index][0] == '®':
+                push(Regex(code_stack[current_line][index][1:len(code_stack[current_line][index])-1]))
             index += 1
-    dump_print(stack)
-    print()
+    if dump:
+        dump_print(stack)
+        print()
 
 
 def dump_print(stack_list):
@@ -414,7 +463,7 @@ operators = {
     ),
     'Þ': attrdict(
         arity=1,
-        call=lambda x: eval(x) if is_string(x) else change_variable_accuracy(x)
+        call=lambda x: eval(x) if is_string(x) and not safe_mode else change_variable_accuracy(x)
     ),
     '~': attrdict(
         arity=1,
@@ -445,13 +494,20 @@ else:
             print("-c <code>: runs the code provided.")
             print("-shell: starts an interactive Convex shell.")
             print("-s: starts an interactive Convex shell.")
+            print("-safe: disables file IO, Python eval, and operators with internet access.")
+            print("-sm: disables file IO, Python eval, and operators with internet access.")
+            print("-debug: prints the stack in list form after program execution.")
+            print("-d: prints the stack in list form after program execution.")
             index += 1
         elif sys.argv[index] in ("-accuracy", "-a"):
             if index + 1 == len(sys.argv):
                 print("Not enough arguments.\nFor Help: python convex.py --help")
                 break
             else:
-                mpmath.mp.dps = int(sys.argv[index + 1])
+                if 'k' in sys.argv[index + 1] or 'm' in sys.argv[index + 1]:
+                    mpmath.mp.dps = int(sys.argv[index + 1][:len(sys.argv[index + 1])-1]) * {'k': 1000, 'm': 1000000}[sys.argv[index + 1][len(sys.argv[index + 1])-1]]
+                else:
+                    mpmath.mp.dps = int(sys.argv[index + 1])
                 index += 2
         elif sys.argv[index] in ("-file", "-f"):
             if index + 1 == len(sys.argv):
@@ -459,23 +515,30 @@ else:
                 break
             else:
                 file = open(sys.argv[index + 1])
-                run(file.read())
+                run(file.read(), True)
                 index += 2
         elif sys.argv[index] in ("-code", "-c"):
             if index + 1 == len(sys.argv):
                 print("Not enough arguments.\nFor Help: python convex.py --help")
                 break
             else:
-                run(sys.argv[index + 1])
+                run(sys.argv[index + 1], True)
                 index += 2
         elif sys.argv[index] in ("-shell", "-s"):
             while True:
                 stack = []
                 mpmath.mp.dps = 10000
                 try:
-                    run(input(">>> "))
-                    print(stack)
+                    run(input(">>> "), True)
+                    if debug_mode:
+                        print("\nStack: ", stack)
                 except InvalidOperatorError as err:
                     print("Invalid operator:", err)
                 except InvalidOverloadError as err:
                     print(err)
+        elif sys.argv[index] in ("-safe", "-sm"):
+            safe_mode = True
+            index += 1
+        elif sys.argv[index] in ("-debug", "-d"):
+            debug_mode = True
+            index += 1
