@@ -3,6 +3,7 @@ import ast, cmath, copy, fractions, functools, itertools, locale, math, mpmath, 
 
 stack = []
 mpmath.mp.dps = 10000
+last_op = 'N/A'
 
 
 """
@@ -15,16 +16,53 @@ Type Classes
 class Char(object):
     def __init__(self, character):
         if type(character) == Char:
-            self.char = character.to_string()
+            self.char = str(character)
         else:
             self.char = character[1]
-
-    def to_string(self):
-        return self.char
 
     def __str__(self):
         return self.char
 
+
+class Block(object):
+    def __init__(self, block):
+        if type(block) == Block:
+            self.block = str(block)
+        else:
+            self.block = block
+
+    def __str__(self):
+        return self.block
+
+    def run(self):
+        return run(self.block)
+
+
+class InvalidOperatorError(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+
+class InvalidOverloadError(Exception):
+    def __init__(self, a, b=None, c=None, op=None):
+        self.a = a
+        self.b = b
+        self.c = c
+        if op is None:
+            self.op = last_op
+        else:
+            self.op = op
+
+    def __str__(self):
+        if self.a and self.b and self.c:
+            return "Invalid overload for {} {} {} [{}]" .format(type(self.a), type(self.b), type(self.c), self.op)
+        elif self.a and self.b:
+            return "Invalid overload for {} {} [{}]" .format(type(self.a), type(self.b), self.op)
+        elif self.a:
+            return "Invalid overload for {} [{}]".format(type(self.a), self.op)
 
 """
 ==============
@@ -64,7 +102,7 @@ def is_char(obj):
 
 
 def is_block(obj):
-    return is_string(obj) and obj[0] == '{'
+    return type(obj) is Block
 
 
 def push(x):
@@ -98,6 +136,14 @@ def to_string(obj):
 def to_string_repr(obj):
     return "Not Ready Yet"
 
+
+def to_number(num):
+    if num == '.':
+        return num
+    elif '.' in num:
+        return float(num)
+    else:
+        return int(num)
 
 """
 =======================
@@ -142,11 +188,29 @@ def split_code(code):
             elif line[index] == '\'':
                 line_stack.append(line[index] + line[index + 1])
                 index += 2
+            elif line[index] in '0 1 2 3 4 5 6 7 8 9 .'.split(' '):
+                dot = line[index] == '.'
+                num = line[index]
+                index += 1
+                while index < len(line):
+                    if line[index] == '.':
+                        if dot:
+                            break
+                        else:
+                            num += '.'
+                            dot = True
+                        index += 1
+                    elif line[index] in '0 1 2 3 4 5 6 7 8 9'.split(' '):
+                        num += line[index]
+                        index += 1
+                    else:
+                        break
+                line_stack.append(num)
+                # print(num)
             else:
                 line_stack.append(line[index])
                 index += 1
         result.append(line_stack)
-        # print(result)
     return result
 
 
@@ -167,6 +231,7 @@ def run_op(name):
 
 
 def run_temp_stack(code):
+    global last_op
     temp_stack = []
     code_stack = split_code(code)[0]
 
@@ -196,43 +261,63 @@ def run_temp_stack(code):
             return operators[name]['call'](c, b, a)
     index = 0
     while index < len(code_stack):
-        if len(code_stack[index]) == 1:
+        if re.match("^[0-9.]+$", code_stack[index]):
+            push_temp_stack(to_number(code_stack[index]))
+            index += 1
+        elif len(code_stack[index]) == 1:
             if re.match("[A-Z¢è]", code_stack[index]):
                 push_temp_stack(variables[code_stack[index]])
                 index += 1
             else:
-                push_temp_stack(run_op_temp_stack(code_stack[index]))
+                try:
+                    last_op = code_stack[index]
+                    push_temp_stack(run_op_temp_stack(code_stack[index]))
+                except KeyError:
+                    raise InvalidOperatorError(code_stack[index])
                 index += 1
         else:
             if code_stack[index][0] == '"':
-                push_temp_stack(exec(code_stack[index]))
+                push_temp_stack(eval(code_stack[index]))
             elif code_stack[index][0] == '\'':
                 push_temp_stack(Char(code_stack[index]))
             elif code_stack[index][0] == '[':
                 push_temp_stack(run_temp_stack(code_stack[index][1:len(code_stack[index]) - 1]))
+            elif code_stack[index][0] == '{':
+                push_temp_stack(Block(code_stack[index]))
             index += 1
     return temp_stack
 
 
 def run(code):
+    global last_op
     code_stack = split_code(code)
     current_line = 0
     index = 0
     while index < len(code_stack[current_line]):
-        if len(code_stack[current_line][index]) == 1:
+        if re.match("^[0-9.]+$", code_stack[current_line][index]):
+            push(to_number(code_stack[current_line][index]))
+            index += 1
+        elif len(code_stack[current_line][index]) == 1:
             if re.match("[A-Z¢è]", code_stack[current_line][index]):
                 push(variables[code_stack[current_line][index]])
                 index += 1
             else:
-                push(run_op(code_stack[current_line][index]))
+                try:
+                    last_op = code_stack[current_line][index]
+                    print(code_stack[current_line][index])
+                    push(run_op(code_stack[current_line][index]))
+                except KeyError:
+                    raise InvalidOperatorError(code_stack[current_line][index])
                 index += 1
         else:
             if code_stack[current_line][index][0] == '"':
-                push(exec(code_stack[current_line][index]))
+                push(eval(code_stack[current_line][index]))
             elif code_stack[current_line][index][0] == '\'':
                 push(Char(code_stack[current_line][index]))
             elif code_stack[current_line][index][0] == '[':
                 push(run_temp_stack(code_stack[current_line][index][1:len(code_stack[current_line][index])-1]))
+            elif code_stack[current_line][index][0] == '{':
+                push(Block(code_stack[current_line][index]))
             index += 1
     dump_print(stack)
     print()
@@ -256,6 +341,31 @@ Operator Functions
 def base_convert(list_a, base):
     if is_number(list_a) and is_list(base):
         return base_convert(base, list_a)
+
+
+def change_variable_accuracy(accuracy):
+    if is_number(accuracy):
+        mpmath.mp.dps = int(accuracy)
+
+
+def tilda(obj):
+    if is_number(obj):
+        if is_float(obj):
+            raise InvalidOverloadError(obj)
+        elif is_int(obj):
+            return ~obj
+    elif is_block(obj):
+        run(str(obj)[1:len(str(obj))-1])
+        return None
+    elif is_string(obj) or is_char(obj):
+        run(str(obj))
+        return None
+    elif is_list(obj):
+        for item in obj:
+            push(item)
+        return None
+    else:
+        raise InvalidOverloadError(obj)
 
 
 variables = {
@@ -301,8 +411,17 @@ operators = {
     'b': attrdict(
         arity=2,
         call=base_convert
+    ),
+    'Þ': attrdict(
+        arity=1,
+        call=lambda x: eval(x) if is_string(x) else change_variable_accuracy(x)
+    ),
+    '~': attrdict(
+        arity=1,
+        call=tilda
     )
 }
+
 
 if len(sys.argv) == 1:
     print("Not enough arguments.\nFor Help: python convex.py --help")
@@ -324,6 +443,8 @@ else:
             print("-f <file>: runs the program specified in the file at the path provided, using the CP-1252 encoding.")
             print("-code <code>: runs the code provided.")
             print("-c <code>: runs the code provided.")
+            print("-shell: starts an interactive Convex shell.")
+            print("-s: starts an interactive Convex shell.")
             index += 1
         elif sys.argv[index] in ("-accuracy", "-a"):
             if index + 1 == len(sys.argv):
@@ -347,3 +468,14 @@ else:
             else:
                 run(sys.argv[index + 1])
                 index += 2
+        elif sys.argv[index] in ("-shell", "-s"):
+            while True:
+                stack = []
+                mpmath.mp.dps = 10000
+                try:
+                    run(input(">>> "))
+                    print(stack)
+                except InvalidOperatorError as err:
+                    print("Invalid operator:", err)
+                except InvalidOverloadError as err:
+                    print(err)
