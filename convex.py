@@ -1,7 +1,8 @@
-import ast, cmath, copy, fractions, functools, itertools, locale, math, operator, parser, random, re, sympy, sys, time
+import ast, cmath, copy, fractions, functools, itertools, locale, math, mpmath, operator, parser, random, re, sympy, sys, time
 # import dictionary, numpy
 
 stack = []
+mpmath.mp.dps = 10000
 
 
 """
@@ -19,6 +20,9 @@ class Char(object):
             self.char = character[1]
 
     def to_string(self):
+        return self.char
+
+    def __str__(self):
         return self.char
 
 
@@ -74,6 +78,25 @@ def pop():
 
 def peek():
     return stack[len(stack)-1]
+
+
+def to_string(obj):
+    if type(obj) is str:
+        return obj
+    elif type(obj) is int or type(obj) is float or type(obj) is Char:
+        return str(obj)
+    elif type(obj) is list:
+        result = ""
+        for item in obj:
+            result += to_string(item)
+        return result
+    else:
+        return str(obj)
+
+
+# TODO: FINISH
+def to_string_repr(obj):
+    return "Not Ready Yet"
 
 
 """
@@ -211,6 +234,16 @@ def run(code):
             elif code_stack[current_line][index][0] == '[':
                 push(run_temp_stack(code_stack[current_line][index][1:len(code_stack[current_line][index])-1]))
             index += 1
+    dump_print(stack)
+    print()
+
+
+def dump_print(stack_list):
+    for item in stack_list:
+        if type(item) is list:
+            dump_print(item)
+        else:
+            print(to_string(item), end="")
 
 
 """
@@ -241,7 +274,7 @@ variables = {
     'M': '',
     'N': '\n',
     'O': '',
-    'P': math.pi,
+    'P': mpmath.pi,
     'Q': 0,
     'R': 0,
     'S': ' ',
@@ -252,8 +285,8 @@ variables = {
     'X': 1,
     'Y': 2,
     'Z': 3,
-    '¢': (1 + 5 ** 0.5) / 2,
-    'è': math.e
+    '¢': mpmath.phi,
+    'è': mpmath.e
 }
 
 operators = {
@@ -271,6 +304,46 @@ operators = {
     )
 }
 
-
-run('[][A B[C]]')
-print(stack)
+if len(sys.argv) == 1:
+    print("Not enough arguments.\nFor Help: python convex.py --help")
+else:
+    index = 1
+    while index < len(sys.argv):
+        if sys.argv[index] in ("-help", "-h", "-?"):
+            print("Convex Help")
+            print()
+            print("Usage: python convex.py [--flag] <program>")
+            print()
+            print("Flags:")
+            print("-help: display the usage information of this program.")
+            print("-h: display the usage information of this program.")
+            print("-?: display the usage information of this program.")
+            print("-accuracy <digits>: changes the accuracy for mathematical operations and constants.")
+            print("-a <digits>: changes the accuracy for mathematical operations and constants.")
+            print("-file <file>: runs the program specified in the file at the path provided, using the CP-1252 encoding.")
+            print("-f <file>: runs the program specified in the file at the path provided, using the CP-1252 encoding.")
+            print("-code <code>: runs the code provided.")
+            print("-c <code>: runs the code provided.")
+            index += 1
+        elif sys.argv[index] in ("-accuracy", "-a"):
+            if index + 1 == len(sys.argv):
+                print("Not enough arguments.\nFor Help: python convex.py --help")
+                break
+            else:
+                mpmath.mp.dps = int(sys.argv[index + 1])
+                index += 2
+        elif sys.argv[index] in ("-file", "-f"):
+            if index + 1 == len(sys.argv):
+                print("Not enough arguments.\nFor Help: python convex.py --help")
+                break
+            else:
+                file = open(sys.argv[index + 1])
+                run(file.read())
+                index += 2
+        elif sys.argv[index] in ("-code", "-c"):
+            if index + 1 == len(sys.argv):
+                print("Not enough arguments.\nFor Help: python convex.py --help")
+                break
+            else:
+                run(sys.argv[index + 1])
+                index += 2
