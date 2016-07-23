@@ -2,6 +2,7 @@ import ast, cmath, copy, fractions, functools, itertools, locale, math, mpmath, 
 # import dictionary, numpy
 
 stack = []
+marks = []
 mpmath.mp.dps = 10000
 last_op = 'N/A'
 safe_mode = False
@@ -300,13 +301,14 @@ def is_regex(obj):
     return type(obj) is Regex
 
 
-def push(x):
-    if x is True:
-        stack.append(1)
-    elif x is False:
-        stack.append(0)
-    elif x is not None:
-        stack.append(x)
+def push(*items):
+    for x in items:
+        if x is True:
+            stack.append(1)
+        elif x is False:
+            stack.append(0)
+        elif x is not None:
+            stack.append(x)
 
 
 def pop():
@@ -315,6 +317,18 @@ def pop():
 
 def peek():
     return stack[len(stack)-1]
+
+
+def mark():
+    marks.append(len(stack))
+
+
+def pop_mark():
+    start = 0 if len(marks) == 0 else marks.pop()
+    result = []
+    for _ in range(start, len(stack)):
+        result.append(stack.pop(start))
+    push(result)
 
 
 def to_string(obj):
@@ -481,72 +495,6 @@ def run_op(name):
         return operators[name]['call'](c, b, a)
 
 
-def run_temp_stack(code):
-    global last_op
-    temp_stack = []
-    code_stack = split_code(code)[0]
-
-    def push_temp_stack(x):
-        if x is True:
-            stack.append(1)
-        elif x is False:
-            stack.append(0)
-        elif x is not None:
-            temp_stack.append(x)
-
-    def pop_temp_stack():
-        if len(temp_stack) > 0:
-            return temp_stack.pop()
-        else:
-            return stack.pop()
-
-    def run_op_temp_stack(name):
-        arity = operators[name]['arity']
-        if arity == 0:
-            return operators[name]['call']()
-        elif arity == 1:
-            a = pop_temp_stack()
-            return operators[name]['call'](a)
-        elif arity == 2:
-            a = pop_temp_stack()
-            b = pop_temp_stack()
-            return operators[name]['call'](b, a)
-        elif arity == 3:
-            a = pop_temp_stack()
-            b = pop_temp_stack()
-            c = pop_temp_stack()
-            return operators[name]['call'](c, b, a)
-    index = 0
-    while index < len(code_stack):
-        if re.match("^-?[0-9.]+$", code_stack[index]):
-            push_temp_stack(to_number(code_stack[index]))
-            index += 1
-        elif len(code_stack[index]) == 1:
-            if re.match("[A-Z¢è]", code_stack[index]):
-                push_temp_stack(variables[code_stack[index]])
-                index += 1
-            else:
-                try:
-                    last_op = code_stack[index]
-                    push_temp_stack(run_op_temp_stack(code_stack[index]))
-                except KeyError:
-                    raise InvalidOperatorError(code_stack[index])
-                index += 1
-        else:
-            if code_stack[index][0] == '"':
-                push_temp_stack(eval(code_stack[index]))
-            elif code_stack[index][0] == '\'':
-                push_temp_stack(Char(code_stack[index]))
-            elif code_stack[index][0] == '[':
-                push_temp_stack(run_temp_stack(code_stack[index][1:len(code_stack[index]) - 1]))
-            elif code_stack[index][0] == '{':
-                push_temp_stack(Block(code_stack[index]))
-            elif code_stack[index][0] == '®':
-                push_temp_stack(Regex(code_stack[index][1:len(code_stack[index]) - 1]))
-            index += 1
-    return temp_stack
-
-
 def run(code, dump=False):
     global last_op
     code_stack = split_code(code)
@@ -560,6 +508,26 @@ def run(code, dump=False):
             if re.match("[A-Z¢è]", code_stack[current_line][index]):
                 push(variables[code_stack[current_line][index]])
                 index += 1
+            elif code_stack[current_line][index][0] == ':':
+                if index + 1 == len(code_stack):
+                    print('Unfinished operator: \':\'')
+                else:
+                    if re.match("[A-Z¢è]", code_stack[current_line][index + 1]):
+                        variables[code_stack[current_line][index + 1]] = peek()
+                    elif len(code_stack[current_line][index + 1]) == 1:
+                        try:
+                            arity = operators[code_stack[current_line][index + 1]]['arity']
+                            if arity == 1:
+                                push(quick_map(pop(), code_stack[current_line][index + 1]))
+                            elif arity == 2:
+                                push(quick_fold(pop(), code_stack[current_line][index + 1]))
+                            else:
+                                print('Unhandled operator after \':\': ' + code_stack[current_line][index + 1])
+                        except KeyError:
+                            raise InvalidOperatorError(code_stack[current_line][index + 1])
+                    else:
+                        print('Unhandled operator after \':\': ' + code_stack[current_line][index + 1])
+                    index += 2
             else:
                 try:
                     last_op = code_stack[current_line][index]
@@ -573,7 +541,9 @@ def run(code, dump=False):
             elif code_stack[current_line][index][0] == '\'':
                 push(Char(code_stack[current_line][index]))
             elif code_stack[current_line][index][0] == '[':
-                push(run_temp_stack(code_stack[current_line][index][1:len(code_stack[current_line][index])-1]))
+                mark()
+                run(code_stack[current_line][index][1:len(code_stack[current_line][index])-1])
+                pop_mark()
             elif code_stack[current_line][index][0] == '{':
                 push(Block(code_stack[current_line][index]))
             elif code_stack[current_line][index][0] == '®':
@@ -721,6 +691,26 @@ def get_value(x, y):
     raise InvalidOverloadError(x, y)
 
 
+def quick_map(list, op):
+    if not is_list(list):
+        raise InvalidOverloadError(list, op)
+    mark()
+    for item in list:
+        push(item)
+        run(op)
+    pop_mark()
+    return None
+
+
+def quick_fold(list, op):
+    if not is_list(list):
+        raise InvalidOverloadError(list, op)
+    push(list[0])
+    for i in range(1, len(list)):
+        push(list[i])
+        run(op)
+    return None
+
 variables = {
     'A': 10,
     'B': 11,
@@ -751,6 +741,8 @@ variables = {
     '¢': mpmath.phi,
     'è': mpmath.e
 }
+
+var_defaults = variables.copy()
 
 operators = {
     ' ': attrdict(
@@ -786,8 +778,8 @@ operators = {
         call=lambda x: None
     ),
     '_': attrdict(
-        arity=0,
-        call=lambda: push(peek())
+        arity=1,
+        call=lambda x: push(x, x)
     ),
     '#': attrdict(
         arity=2,
@@ -808,7 +800,7 @@ else:
         if sys.argv[index] in ("-help", "-h", "-?"):
             print("Convex Help")
             print()
-            print("Usage: python convex.py [--flag] <program>")
+            print("Usage: python convex.py [-flag] <program>")
             print()
             print("Flags:")
             print("-help: display the usage information of this program.")
@@ -820,8 +812,10 @@ else:
             print("-f <file>: runs the program specified in the file at the path provided, using the CP-1252 encoding.")
             print("-code <code>: runs the code provided.")
             print("-c <code>: runs the code provided.")
-            print("-shell: starts an interactive Convex shell.")
-            print("-s: starts an interactive Convex shell.")
+            print("-shell: starts an interactive Convex independent shell.")
+            print("-s: starts an interactive Convex independent shell.")
+            print("-repl: starts and interactive Convex REPL shell.")
+            print("-r: starts and interactive Convex REPL shell.")
             print("-safe: disables file IO, Python eval, and operators with internet access.")
             print("-sm: disables file IO, Python eval, and operators with internet access.")
             print("-debug: prints the stack in list form after program execution.")
@@ -829,7 +823,7 @@ else:
             index += 1
         elif sys.argv[index] in ("-accuracy", "-a"):
             if index + 1 == len(sys.argv):
-                print("Not enough arguments.\nFor Help: python convex.py --help")
+                print("Not enough arguments.\nFor Help: python convex.py -help")
                 break
             else:
                 if 'k' in sys.argv[index + 1] or 'm' in sys.argv[index + 1]:
@@ -860,6 +854,17 @@ else:
             while True:
                 stack = []
                 mpmath.mp.dps = 10000
+                variables = var_defaults.copy()
+                try:
+                    run(input(">>> "), True)
+                    if debug_mode:
+                        print("\nStack: ", to_string_repr(stack))
+                except InvalidOperatorError as err:
+                    print("Invalid operator:", err)
+                except InvalidOverloadError as err:
+                    print(err)
+        elif sys.argv[index] in ("-repl", "-r"):
+            while True:
                 try:
                     run(input(">>> "), True)
                     if debug_mode:
