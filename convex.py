@@ -18,12 +18,43 @@ Type Classes
 class Char(object):
     def __init__(self, character):
         if type(character) == Char:
-            self.char = str(character)
+            self.char = character.char
+        elif type(character) == str:
+            self.char = ord(character.replace("'", ''))
         else:
-            self.char = character[1]
+            self.char = character
 
     def __str__(self):
-        return self.char
+        return chr(self.char)
+
+    def __bool__(self):
+        return self.char > 0
+
+    def __add__(self, other):
+        if type(other) is Char:
+            self.char += other.char
+        elif type(other) is int:
+            self.char += other
+        return self
+
+    def __radd__(self, other):
+        if other == 0:
+            return self
+        else:
+            return self.__add__(other)
+
+    def __sub__(self, other):
+        if type(other) is Char:
+            self.char -= other.char
+        elif type(other) is int:
+            self.char -= other
+        return self
+
+    def __rsub__(self, other):
+        if other == 0:
+            return self
+        else:
+            return self.__sub__(other)
 
 
 class Block(object):
@@ -38,6 +69,9 @@ class Block(object):
 
     def run(self):
         return run(self.block)
+
+    def __bool__(self):
+        return len(self.block) > 2
 
 
 class Regex(object):
@@ -69,6 +103,130 @@ class Regex(object):
 
     def flags(self):
         return self.flags
+
+    def __bool__(self):
+        return self.pattern != ''
+
+
+class Quaternion(object):
+    def __init__(self, a, b=0, c=0, d=0):
+        if type(a) is Quaternion:
+            self.a = a.a
+            self.b = a.b
+            self.c = a.c
+            self.d = a.d
+        else:
+            self.a = a
+            self.b = b
+            self.c = c
+            self.d = d
+
+    def add(self, a, b=0, c=0, d=0):
+        if type(a) is Quaternion:
+            self.a += a.a
+            self.b += a.b
+            self.c += a.c
+            self.d += a.d
+        else:
+            self.a += a
+            self.b += b
+            self.c += c
+            self.d += d
+        return self
+
+    def subtract(self, a, b=0, c=0, d=0):
+        if type(a) is Quaternion:
+            self.a -= a.a
+            self.b -= a.b
+            self.c -= a.c
+            self.d -= a.d
+        else:
+            self.a -= a
+            self.b -= b
+            self.c -= c
+            self.d -= d
+        return self
+
+    def multiply(self, a, b=0, c=0, d=0):
+        if type(a) is int or type(a) is float:
+            self.a *= a
+            self.b *= a
+            self.c *= a
+            self.d *= a
+        elif type(a) is Quaternion:
+            self.a = self.a * a.a - self.b * a.b - self.c * a.c - self.d * a.d
+            self.b = self.b * a.a + self.a * a.b + self.c * a.d - self.d * a.c
+            self.c = self.a * a.c - self.b * a.d + self.c * a.a + self.d * a.b
+            self.d = self.a * a.d + self.b * a.c - self.c * a.b + self.d * a.a
+        else:
+            self.multiply(Quaternion(a, b, c, d))
+        return self
+
+    def norm(self, q=None):
+        if type(q) is Quaternion:
+            return q.a**2 + q.b**2 + q.c**2 + q.d**2
+        else:
+            return self.a ** 2 + self.b ** 2 + self.c ** 2 + self.d ** 2
+
+    def conj(self, q=None):
+        if type(q) is Quaternion:
+            return Quaternion(q.a, -q.b, -q.c, -q.d)
+        else:
+            self.b *= -1
+            self.c *= -1
+            self.d *= -1
+            return self
+
+    def magnitude(self, q=None):
+        if type(q) is Quaternion:
+            return q.norm()**0.5
+        else:
+            return self.norm()**0.5
+
+    def divide(self, a, b=0, c=0, d=0):
+        if type(a) is int or type(a) is float:
+            self.a /= a
+            self.b /= a
+            self.c /= a
+            self.d /= a
+        elif type(a) is Quaternion:
+            self.multiply(a.conj()).divide(a.norm())
+        else:
+            self.divide(Quaternion(a, b, c, d))
+        return self
+
+    def __str__(self):
+        result = ""
+        if self.a != 0:
+            result += str(simplify(self.a))
+        if self.b != 0:
+            if self.a != 0 and self.b > 0:
+                result += '+'
+            if self.b == -1:
+                result += '-'
+            else:
+                result += str(simplify(self.b)) if self.b != 1 else ''
+            result += 'i'
+        if self.c != 0:
+            if (self.a != 0 or self.b != 0) and self.c > 0:
+                result += '+'
+            if self.c == -1:
+                result += '-'
+            else:
+                result += str(simplify(self.c)) if self.c != 1 else ''
+            result += 'j'
+        if self.d != 0:
+            if (self.a != 0 or self.b != 0 or self.c != 0) and self.d > 0:
+                result += '+'
+            if self.d == -1:
+                result += '-'
+            else:
+                result += str(simplify(self.d)) if self.d != 1 else ''
+            result += 'k'
+        return result
+
+    def __bool__(self):
+        return self.norm() != 0
 
 
 class InvalidOperatorError(Exception):
@@ -111,15 +269,15 @@ class attrdict(dict):
 
 
 def is_list(obj):
-    return type(obj) is list
+    return type(obj) is list or type(obj) is str or type(obj) is Regex
 
 
 def is_string(obj):
-    return type(obj) is str
+    return type(obj) is str or type(obj) is Regex
 
 
 def is_number(obj):
-    return type(obj) is int or obj is float
+    return type(obj) is int or type(obj) is float
 
 
 def is_int(obj):
@@ -136,6 +294,10 @@ def is_char(obj):
 
 def is_block(obj):
     return type(obj) is Block
+
+
+def is_regex(obj):
+    return type(obj) is Regex
 
 
 def push(x):
@@ -169,9 +331,42 @@ def to_string(obj):
         return str(obj)
 
 
-# TODO: FINISH
 def to_string_repr(obj):
-    return "Not Ready Yet"
+    if type(obj) is str:
+        result = "\""
+        index = 0
+        while index < len(obj):
+            char = obj[index]
+            if char == '"':
+                result += '\\"'
+            elif char == '\\':
+                if index == len(obj)-1:
+                    result += "\\\\"
+                else:
+                    char2 = obj[index + 1]
+                    if char2 == '"' or char2 == '\\':
+                        result += "\\\\"
+                    else:
+                        result += '\\'
+            else:
+                result += char
+            index += 1
+        result += "\""
+        return result
+    elif type(obj) is list:
+        result = '['
+        for item in obj:
+            result += to_string_repr(item)
+            result += ' '
+        if len(result) > 1:
+            result = result[0:len(result)-1] + ']'
+        else:
+            result += ']'
+        return result
+    elif type(obj) is Char:
+        return "'" + str(obj)
+    else:
+        return str(obj)
 
 
 def to_number(num):
@@ -181,6 +376,13 @@ def to_number(num):
         return float(num)
     else:
         return int(num)
+
+
+def simplify(num):
+    if type(num) is float and int(num) == num:
+        return int(num)
+    else:
+        return num
 
 """
 =======================
@@ -211,6 +413,12 @@ def split_code(code):
                     block += '\\"'
                     index += 2
                     continue
+                elif line[index] == '\\':
+                    if line[index + 1] == '\\':
+                        block += '\\'
+                    block += line[index + 1]
+                    index += 2
+                    continue
                 block += line[index]
                 if line[index] == open_literals[len(open_literals)-1]:
                     open_literals.pop()
@@ -229,7 +437,7 @@ def split_code(code):
             elif line[index] == '\'':
                 line_stack.append(line[index] + line[index + 1])
                 index += 2
-            elif line[index] in '0 1 2 3 4 5 6 7 8 9 .'.split(' '):
+            elif line[index] in '0 1 2 3 4 5 6 7 8 9 . -'.split(' '):
                 dot = line[index] == '.'
                 num = line[index]
                 index += 1
@@ -257,7 +465,9 @@ def split_code(code):
 
 def run_op(name):
     arity = operators[name]['arity']
-    if arity == 1:
+    if arity == 0:
+        return operators[name]['call']()
+    elif arity == 1:
         a = pop()
         return operators[name]['call'](a)
     elif arity == 2:
@@ -292,7 +502,9 @@ def run_temp_stack(code):
 
     def run_op_temp_stack(name):
         arity = operators[name]['arity']
-        if arity == 1:
+        if arity == 0:
+            return operators[name]['call']()
+        elif arity == 1:
             a = pop_temp_stack()
             return operators[name]['call'](a)
         elif arity == 2:
@@ -306,7 +518,7 @@ def run_temp_stack(code):
             return operators[name]['call'](c, b, a)
     index = 0
     while index < len(code_stack):
-        if re.match("^[0-9.]+$", code_stack[index]):
+        if re.match("^-?[0-9.]+$", code_stack[index]):
             push_temp_stack(to_number(code_stack[index]))
             index += 1
         elif len(code_stack[index]) == 1:
@@ -341,7 +553,7 @@ def run(code, dump=False):
     current_line = 0
     index = 0
     while index < len(code_stack[current_line]):
-        if re.match("^[0-9.]+$", code_stack[current_line][index]):
+        if re.match("^-?[0-9.]+$", code_stack[current_line][index]):
             push(to_number(code_stack[current_line][index]))
             index += 1
         elif len(code_stack[current_line][index]) == 1:
@@ -387,11 +599,6 @@ Operator Functions
 """
 
 
-def base_convert(list_a, base):
-    if is_number(list_a) and is_list(base):
-        return base_convert(base, list_a)
-
-
 def change_variable_accuracy(accuracy):
     if is_number(accuracy):
         mpmath.mp.dps = int(accuracy)
@@ -415,6 +622,103 @@ def tilda(obj):
         return None
     else:
         raise InvalidOverloadError(obj)
+
+
+def wrap_stack():
+    global stack
+    stack = [stack]
+    return None
+
+
+def power(x, y):
+    return simplify(x ** y)
+
+
+def find_index(x, y):
+    if is_list(x):
+        if is_block(y):
+            for i in range(len(x)):
+                if is_string(x):
+                    push(Char(ord(x[i])))
+                else:
+                    push(x[i])
+                run(str(y)[1:len(str(y)) - 1])
+                if pop():
+                    return i
+            return -1
+        return find(x, y) if is_list(y) else x.index(y)
+    if is_list(y):
+        if is_block(x):
+            return find_index(y, x)
+        return y.index(x)
+    raise InvalidOverloadError(x, y)
+
+
+def find(list, sub):
+    p = pre_proc(sub)
+    m = 0
+    for i in range(len(list)):
+        while m >= 0 and sub[m] != list[i]:
+            m = p[m]
+        if m == len(sub) - 1:
+            return i - m
+        m += 1
+    return -1
+
+
+def pre_proc(list):
+    p = [-1]
+    n = 0
+    for i in range(1, len(list)):
+        if list[i] == list[n]:
+            p.append(p[n])
+        else:
+            p.append(n)
+            while True:
+                n = p[n]
+                if not (n >= 0 and list[i] != list[n]):
+                    break
+        n += 1
+    return p
+
+
+def check_equal(x, y):
+    if is_char(x) and is_char(y):
+        return x.char == y.char
+    if type(x) == type(y):
+        return x == y
+    if is_number(x) and is_number(y):
+        return float(x) == float(y)
+    if is_char(x) and is_number(y):
+        return x.char == int(y)
+    if is_number(x) and is_char(y):
+        return int(x) == y.char
+    return get_value(x, y)
+
+
+def get_value(x, y):
+    if is_list(y) and not is_list(x):
+        return get_value(y, x)
+    if is_list(x):
+        if is_number(y):
+            if is_string(x):
+                return Char(ord(x[int(y) % len(x)]))
+            else:
+                return x[int(y) % len(x)]
+        if is_block(y):
+            for i in range(len(x)):
+                if is_string(x):
+                    push(Char(ord(x[i])))
+                else:
+                    push(x[i])
+                run(str(y)[1:len(str(y)) - 1])
+                if pop():
+                    if is_string(x):
+                        return Char(x[i])
+                    else:
+                        return x[i]
+            return None
+    raise InvalidOverloadError(x, y)
 
 
 variables = {
@@ -451,15 +755,11 @@ variables = {
 operators = {
     ' ': attrdict(
         arity=0,
-        call=None
+        call=lambda: None
     ),
     'a': attrdict(
         arity=1,
         call=lambda x: [x]
-    ),
-    'b': attrdict(
-        arity=2,
-        call=base_convert
     ),
     'Þ': attrdict(
         arity=1,
@@ -468,6 +768,34 @@ operators = {
     '~': attrdict(
         arity=1,
         call=tilda
+    ),
+    '`': attrdict(
+        arity=1,
+        call=to_string_repr
+    ),
+    ']': attrdict(
+        arity=0,
+        call=wrap_stack
+    ),
+    '!': attrdict(
+        arity=1,
+        call=lambda x: not x
+    ),
+    ';': attrdict(
+        arity=1,
+        call=lambda x: None
+    ),
+    '_': attrdict(
+        arity=0,
+        call=lambda: push(peek())
+    ),
+    '#': attrdict(
+        arity=2,
+        call=lambda x, y: power(x, y) if is_number(x) and is_number(y) else find_index(x, y)
+    ),
+    '=': attrdict(
+        arity=2,
+        call=check_equal
     )
 }
 
@@ -516,6 +844,8 @@ else:
             else:
                 file = open(sys.argv[index + 1])
                 run(file.read(), True)
+                if debug_mode:
+                    print("\nStack: ", to_string_repr(stack))
                 index += 2
         elif sys.argv[index] in ("-code", "-c"):
             if index + 1 == len(sys.argv):
@@ -523,6 +853,8 @@ else:
                 break
             else:
                 run(sys.argv[index + 1], True)
+                if debug_mode:
+                    print("\nStack: ", to_string_repr(stack))
                 index += 2
         elif sys.argv[index] in ("-shell", "-s"):
             while True:
@@ -531,7 +863,7 @@ else:
                 try:
                     run(input(">>> "), True)
                     if debug_mode:
-                        print("\nStack: ", stack)
+                        print("\nStack: ", to_string_repr(stack))
                 except InvalidOperatorError as err:
                     print("Invalid operator:", err)
                 except InvalidOverloadError as err:
