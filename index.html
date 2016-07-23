@@ -5,8 +5,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+  <link href="https://cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet" />
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/plug-ins/1.10.7/integration/bootstrap/3/dataTables.bootstrap.js"></script>
+  <script>
+	$(document).ready(function() {
+		$('#types').dataTable();
+		$('#operators').dataTable();
+		$('#variables').dataTable();
+	});
+</script>
 </head>
 <body>
 
@@ -15,7 +25,7 @@
   <h4><span class="label label-danger">Not Fully Implemented</span> <span class="label label-warning">Requires Unsafe Mode</span></h4>
   
   <h2>Types</h2>
-  <table class="table table-striped">
+  <table id="types" class="table table-striped">
     <thead>
       <tr>
         <th>Type</th>
@@ -63,7 +73,7 @@
   </table>
   
   <h2>Operators</h2>
-  <table class="table table-striped">
+  <table id="operators" class="table table-striped">
     <thead>
       <tr>
         <th>Op</th>
@@ -251,14 +261,10 @@
   </table>
   
   <h2>Variables</h2>
-  <table class="table table-striped">
+  <table id="variables" class="table table-striped">
     <thead>
       <tr>
         <th>Variable</th>
-		<th>Value</th>
-		<th></th>
-		<th> </th>
-		<th>Variable</th>
 		<th>Value</th>
       </tr>
     </thead>
@@ -266,98 +272,112 @@
       <tr>
         <td><code>A
         <td><code>10
-		<td><td> 
-		<td><code>O
-        <td><code>""
       </tr>
 	  <tr>
         <td><code>B
         <td><code>11
-		<td><td> 
-		<td><code>P
-        <td>pi
       </tr>
 	  <tr>
         <td><code>C
         <td><code>12
-		<td><td> 
-		<td><code>Q
-        <td><code>0
       </tr>
 	  <tr>
         <td><code>D
         <td><code>13
-		<td><td> 
-		<td><code>R
-        <td><code>0
       </tr>
 	  <tr>
         <td><code>E
         <td><code>14
-		<td><td> 
-		<td><code>S
-        <td><code>" "
       </tr>
 	  <tr>
         <td><code>F
         <td><code>15
-		<td><td> 
-		<td><code>T
-        <td><code>"abcdefghijklmnopqrstuvwxyz"
       </tr>
 	  <tr>
         <td><code>G
         <td><code>16
-		<td><td> 
-		<td><code>U
-        <td><code>"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
       </tr>
 	  <tr>
         <td><code>H
         <td><code>17
-		<td><td> 
-		<td><code>V
-        <td><code>"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
       </tr>
 	  <tr>
         <td><code>I
         <td><code>18
-		<td><td> 
-		<td><code>W
-        <td><code>-1
       </tr>
 	  <tr>
         <td><code>J
         <td><code>19
-		<td><td> 
-		<td><code>X
-        <td><code>1
       </tr>
 	  <tr>
         <td><code>K
         <td><code>20
-		<td><td> 
-		<td><code>Y
-        <td><code>2
       </tr>
 	  <tr>
         <td><code>L
         <td><code>[]
-		<td><td> 
-		<td><code>Z
-        <td><code>3
       </tr>
 	  <tr>
         <td><code>M
         <td><code>""
-		<td><td> 
-		<td><code>¢
-        <td>phi
       </tr>
 	  <tr>
         <td><code>N
         <td><code>"\n"
-		<td><td> 
+      </tr>
+	  <tr>
+        <td><code>O
+        <td><code>""
+	  </tr>
+	  <tr>
+        <td><code>P
+        <td>pi
+	  </tr>
+	  <tr>
+        <td><code>Q
+        <td><code>0
+	  </tr>
+	  <tr>
+        <td><code>R
+        <td><code>0
+	  </tr>
+	  <tr>
+        <td><code>S
+        <td><code>" "
+	  </tr>
+	  <tr>
+        <td><code>T
+        <td><code>"abcdefghijklmnopqrstuvwxyz"
+	  </tr>
+	  <tr>
+        <td><code>U
+        <td><code>"ABCDEFGHIJKLMNOPQRSTUVWXYZ" 
+	  </tr>
+	  <tr>
+        <td><code>V
+        <td><code>"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" 
+	  </tr>
+	  <tr>
+        <td><code>W
+        <td><code>-1
+	  </tr>
+	  <tr>
+        <td><code>X
+        <td><code>1
+	  </tr>
+	  <tr>
+        <td><code>Y
+        <td><code>2
+	  </tr>
+	  <tr>
+        <td><code>Z
+        <td><code>3
+	  </tr>
+	  <tr>
+	  	<td><code>¢
+        <td>phi
+	  </tr>
+	  <tr>
 		<td><code>è
         <td>e
       </tr>
