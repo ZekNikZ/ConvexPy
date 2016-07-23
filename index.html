@@ -257,6 +257,33 @@
 		<td><code>"test"{'f<}=
 		<td><code>'e
       </tr>
+      <tr>
+        <td><code>:
+        <td>set variable
+        <td>1 + i (2)
+		<td>x:[any], i:[var]
+		<td>Set the value of i to x.
+		<td><code>"12":A
+		<td><code>"12"
+      </tr>
+      <tr>
+        <td><code>:
+        <td>quick map
+        <td>1 + i (2)
+		<td>x:[list], i:[op(arity=1)]
+		<td>Runs i on each value of x.
+		<td><code>[1 2 3]:)
+		<td><code>[2 3 4]
+      </tr>
+      <tr>
+        <td><code>:
+        <td>quick fold
+        <td>1 + i (2)
+		<td>x:[list], i:[op(arity=2)]
+		<td>Folds x using i.
+		<td><code>[1 2 3 4]:+
+		<td><code>10
+      </tr>
     </tbody>
   </table>
   
