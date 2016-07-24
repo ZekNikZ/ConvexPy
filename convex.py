@@ -57,6 +57,15 @@ class Char(object):
         else:
             return self.__sub__(other)
 
+    def __len__(self):
+        return 1
+
+    def __getitem__(self, item):
+        return chr(self.char)
+
+    def __float__(self):
+        return float(self.char)
+
 
 class Block(object):
     def __init__(self, block):
@@ -228,6 +237,9 @@ class Quaternion(object):
 
     def __bool__(self):
         return self.norm() != 0
+
+    def __float__(self):
+        return self.a
 
 
 class InvalidOperatorError(Exception):
@@ -574,7 +586,7 @@ def change_variable_accuracy(accuracy):
         mpmath.mp.dps = int(accuracy)
 
 
-def tilda(obj):
+def op_tilda(obj):
     if is_number(obj):
         if is_float(obj):
             raise InvalidOverloadError(obj)
@@ -711,6 +723,140 @@ def quick_fold(list, op):
         run(op)
     return None
 
+
+def op_percent(x, y):
+    if is_block(x):
+        if is_block(y):
+            raise InvalidOverloadError(x, y)
+        return op_percent(y, x)
+    if is_number(x):
+        if is_list(y):
+            return op_percent(y, x)
+        if is_number(y):
+            return simplify(mod(x, y))
+        if is_block(y):
+            mark()
+            for i in range(int(x)):
+                push(i)
+                run(str(y)[1:len(str(y)) - 1])
+            pop_mark()
+            return None
+    if is_list(x):
+        if is_number(y):
+            return x[::int(y)]
+        if is_block(y):
+            mark()
+            for item in x:
+                push(item)
+                run(str(y)[1:len(str(y)) - 1])
+            pop_mark()
+            return None
+        if is_list(y) or is_char(y):
+            return split(x, y, False)
+    raise InvalidOverloadError(x, y)
+
+
+def split(list, sub, empty):
+    p = pre_proc(sub)
+    x = 0
+    m = 0
+    result = []
+    for i in range(len(list)):
+        while m >= 0 and sub[m] != list[i]:
+            m = p[m]
+        if m == len(sub) - 1:
+            t = list[x:i-m]
+            if empty or len(t) != 0:
+                result.append(t)
+            x = i + 1
+            m = -1
+        m += 1
+    t = list[x:len(list)]
+    if empty or len(t) != 0:
+        result.append(t)
+    return result
+
+
+def mod(x, y):
+    a = math.fabs(x)
+    b = math.fabs(y)
+    r = a
+    while r - b >= 0:
+        r -= b
+    return r * x / math.fabs(x)
+
+
+def op_dollar(x):
+    if is_number(x):
+        y = -1 - x if x < 0 else len(stack) - 1 - x
+        if y < 0 or y >= len(stack):
+            raise IndexError("stack index out of range")
+        return stack[y]
+    if is_string(x):
+        return ''.join(sorted(x))
+    if is_list(x):
+        return sort(to_new_list(x))
+    if is_block(x):
+        block = x
+        list = pop()
+        if not is_list(list):
+            raise InvalidOverloadError(list, block)
+        result = []
+        for item in list:
+            push(item)
+            run(str(block)[1:len(str(block)) - 1])
+            result.append([item, pop()])
+        l = sort(result, lambda a, b: compare(a[1], b[1]))
+        r = []
+        for t in l:
+            r.append(t[0])
+        return r
+
+
+def compare(x, y):
+    if is_list(x) and is_list(y):
+        return compare_lists(x, y)
+    if is_number(x) and is_number(y):
+        if x == y:
+            return 0
+        return -1 if x > y else 1
+    if (is_char(x) and is_number(y)) or (is_char(y) and is_number(x)):
+        if int(x) == int(y):
+            return 0
+        return -1 if int(x) > int(y) else 1
+    raise TypeError("Can't compare types " + type(x) + " and " + type(y))
+
+
+def compare_lists(x, y):
+    n = min(len(x), len(y))
+    for i in range(n):
+        z = compare(x[i], y[i])
+        if z:
+            return z
+    return len(x) - len(y)
+
+
+def sort(list, comp=compare):
+    result = list.copy()
+    while True:
+        test = result.copy()
+        index = 0
+        while index + 1 < len(result):
+            z = comp(result[index], result[index + 1])
+            if z == -1:
+                temp = result[index]
+                result[index] = result[index + 1]
+                result[index + 1] = temp
+            index += 1
+        if test == result:
+            return result
+
+
+def to_new_list(x):
+    if is_list(x):
+        return x.copy()
+    return [x]
+
 variables = {
     'A': 10,
     'B': 11,
@@ -749,6 +895,10 @@ operators = {
         arity=0,
         call=lambda: None
     ),
+    '\t': attrdict(
+        arity=0,
+        call=lambda: None
+    ),
     'a': attrdict(
         arity=1,
         call=lambda x: [x]
@@ -759,7 +909,7 @@ operators = {
     ),
     '~': attrdict(
         arity=1,
-        call=tilda
+        call=op_tilda
     ),
     '`': attrdict(
         arity=1,
@@ -788,6 +938,22 @@ operators = {
     '=': attrdict(
         arity=2,
         call=check_equal
+    ),
+    'o': attrdict(
+        arity=1,
+        call=lambda x: print(to_string(x))
+    ),
+    'p': attrdict(
+        arity=1,
+        call=lambda x: print(to_string_repr(x))
+    ),
+    '%': attrdict(
+        arity=2,
+        call=op_percent
+    ),
+    "$": attrdict(
+        arity=1,
+        call=op_dollar
     )
 }
 
