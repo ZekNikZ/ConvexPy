@@ -284,6 +284,78 @@
 		<td><code>[1 2 3 4]:+
 		<td><code>10
       </tr>
+      <tr>
+        <td><code>%
+        <td>modulus
+        <td>2
+		<td>x:[num], y:[num]
+		<td>Returns x mod y (remainder of x / y).
+		<td><code>8 -2.5%
+		<td><code>0.5
+      </tr>
+      <tr>
+        <td><code>%
+        <td>split without empty parts
+        <td>2
+		<td>x:[list], y:[list|char]
+		<td>Splits x around y.
+		<td><code>[1 2 3 1 2 4][1 2]%
+		<td><code>[[3] [4]]
+      </tr>
+      <tr>
+        <td><code>%
+        <td>select multiples
+        <td>2
+		<td>[list] & [num]
+		<td>Items of [list] with indexes which are multiples of [num].
+		<td><code>"foobar"-2%
+		<td><code>"rbo"
+      </tr>
+      <tr>
+        <td><code>%
+        <td>map
+        <td>2
+		<td>[list] & [block]
+		<td>Map [block] onto each item of [list].
+		<td><code>{'x}"abc"%
+		<td><code>"axbxcx"
+      </tr>
+      <tr>
+        <td><code>%
+        <td>map
+        <td>2
+		<td>[num] & [block]
+		<td>Map [block] onto each item of [0...[num]-1].
+		<td><code>{_*}5%
+		<td><code>[0 1 4 9 16]
+      </tr>
+      <tr>
+        <td><code>$
+        <td>copy from stack
+        <td>1
+		<td>x:[num]
+		<td>Value from stack at position x.
+		<td><code>3 5 1$
+		<td><code>3 5 3
+      </tr>
+      <tr>
+        <td><code>$
+        <td>sort (via values)
+        <td>1
+		<td>x:[list]
+		<td>Sorts x.
+		<td><code>[3 1.5 -2]$
+		<td><code>[-2 1.5 3]
+      </tr>
+      <tr>
+        <td><code>$
+        <td>sort (via keys)
+        <td>2
+		<td>x:[list], y:[block]
+		<td>Sorts x by running y on each item.
+		<td><code>[1 4 3 5 2]{W*}$
+		<td><code>[5 4 3 2 1]
+      </tr>
     </tbody>
   </table>
   
