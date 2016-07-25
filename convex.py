@@ -66,6 +66,9 @@ class Char(object):
     def __float__(self):
         return float(self.char)
 
+    def __int__(self):
+        return self.char
+
 
 class Block(object):
     def __init__(self, block):
@@ -780,10 +783,12 @@ def split(list, sub, empty):
 def mod(x, y):
     a = math.fabs(x)
     b = math.fabs(y)
+    if b == 0:
+        raise ZeroDivisionError("modulus division by zero")
     r = a
     while r - b >= 0:
         r -= b
-    return r * x / math.fabs(x)
+    return r * (1 if x >= 0 else -1)
 
 
 def op_dollar(x):
@@ -820,7 +825,7 @@ def compare(x, y):
         if x == y:
             return 0
         return -1 if x > y else 1
-    if (is_char(x) and is_number(y)) or (is_char(y) and is_number(x)):
+    if (is_char(x) and is_number(y)) or (is_char(y) and is_number(x)) or (is_char(x) and is_char(y)):
         if int(x) == int(y):
             return 0
         return -1 if int(x) > int(y) else 1
@@ -839,7 +844,7 @@ def compare_lists(x, y):
 def sort(list, comp=compare):
     result = list.copy()
     while True:
-        test = result.copy()
+        is_sorted = True
         index = 0
         while index + 1 < len(result):
             z = comp(result[index], result[index + 1])
@@ -847,8 +852,9 @@ def sort(list, comp=compare):
                 temp = result[index]
                 result[index] = result[index + 1]
                 result[index + 1] = temp
+                is_sorted = False
             index += 1
-        if test == result:
+        if is_sorted:
             return result
 
 
@@ -856,6 +862,190 @@ def to_new_list(x):
     if is_list(x):
         return x.copy()
     return [x]
+
+
+def op_ampersand(x, y):
+    if is_int(x) and is_int(y):
+        return x & y
+    if is_block(y):
+        if x:
+            run(str(y)[1:len(str(y)) - 1])
+        return None
+    if is_string(x) or is_string(y):
+        if not ((is_string(x) and is_string(y)) or (is_char(x) or is_char(y))):
+            raise InvalidOverloadError(x, y)
+        l1 = to_list(x)
+        l2 = to_list(y)
+        if is_string(l1):
+            l1 = []
+            for char in x:
+                l1.append(ord(char))
+        else:
+            l1 = [int(x)]
+        if is_string(l2):
+            l2 = []
+            for char in y:
+                l2.append(ord(char))
+        else:
+            l2 = [int(y)]
+        result = op_ampersand(l1, l2)
+        string = ''
+        for i in result:
+            string += chr(i)
+        return string
+    if is_list(x) or is_list(y):
+        result = []
+        l1 = to_list(x)
+        l2 = to_list(y)
+        print(l1, l2)
+        for item in l1:
+            try:
+                if l2.__contains__(item) and not result.__contains__(item):
+                    result.append(item)
+            except ValueError:
+                pass
+        return result
+    if (is_char(x) and is_number(y)) or (is_char(y) and is_number(x)) or (is_char(x) and is_char(y)):
+        return Char(int(x) & int(y))
+    raise InvalidOverloadError(x, y)
+
+
+def to_list(x):
+    if is_list(x):
+        if is_string(x):
+            result = []
+            for char in x:
+                result.append(Char(char))
+            return result
+        return x
+    else:
+        return [x]
+
+
+def inc(x):
+    if is_number(x):
+        return x + 1
+    if is_char(x):
+        return Char(int(x) + 1)
+
+
+def dec(x):
+    if is_number(x):
+        return x - 1
+    if is_char(x):
+        return Char(int(x) - 1)
+
+
+def uncon(x, dir='right'):
+    if not is_list(x):
+        raise InvalidOverloadError(x)
+    if dir == 'right':
+        push(x[:len(x)-1])
+        return Char(x[len(x)-1]) if is_string(x) else x[len(x)-1]
+    if dir == 'left':
+        push(x[1:len(x)])
+        return Char(x[0]) if is_string(x) else x[0]
+    raise InvalidOverloadError(x)
+
+
+def op_asterisk(x, y):
+    if is_number(x) and (is_list(y) or is_char(y) or is_block(y)):
+        return op_asterisk(y, x)
+    if (is_block(x) or is_char(x)) and is_list(y):
+        return op_asterisk(y, x)
+    if (is_list(x) or is_char(x)) and is_number(y):
+        if len(x) * int(y) == 0:
+            return "" if is_string(x) else []
+        if is_char(x):
+            return str(x) * int(y)
+        return x * int(y)
+    if is_block(x) and is_number(y):
+        for _ in range(int(y)):
+            run(str(x)[1:len(str(x)) - 1])
+        return None
+    if is_list(x):
+        if is_block(y):
+            push(x[0])
+            for i in range(1, len(x)):
+                push(x[i])
+                run(str(y)[1:len(str(y)) - 1])
+            return None
+        if is_list(y) or is_char(y):
+            result = [x[0]]
+            l = to_list(y)
+            for i in range(1, len(x)):
+                result += l
+                result.append(x[i])
+            string = True
+            for item in result:
+                if not(is_char(item) or is_string(item)):
+                    string = False
+            if string:
+                temp = ''
+                for item in result:
+                    temp += str(item)
+                return temp
+            return result
+    raise InvalidOverloadError(x, y)
+
+
+def op_plus(x, y):
+    if (is_list(x) or is_list(y)) or (is_char(x) and is_char(y)):
+        result = to_list(x) + to_list(y)
+        string = True
+        for item in result:
+            if not is_char(item):
+                string = False
+        if string:
+            temp = ''
+            for item in result:
+                temp += str(item)
+            return temp
+        return result
+    if (is_char(x) and is_number(y)) or (is_char(y) and is_number(x)):
+        return Char(int(x) + int(y))
+    raise InvalidOverloadError(x, y)
+
+
+def op_comma(x):
+    if is_number(x):
+        return list(range(int(x)))
+    if is_char(x):
+        result = ''
+        for char in list(range(int(x))):
+            result += chr(char)
+        return result
+    if is_list(x):
+        return len(x)
+    if is_block(x):
+        y = pop()
+        if is_list(y):
+            result = []
+            for item in y:
+                push(item)
+                run(str(x)[1:len(str(x)) - 1])
+                if pop():
+                    result.append(item)
+            for item in result:
+                if not is_char(item):
+                    string = False
+            if string:
+                temp = ''
+                for item in result:
+                    temp += str(item)
+                return temp
+            return result
+        if is_number(y):
+            result = []
+            for i in range(y):
+                push(i)
+                run(str(x)[1:len(str(x)) - 1])
+                if pop():
+                    result.append(i)
+            return result
+        raise InvalidOverloadError(y, x)
+    raise InvalidOverloadError(x)
+
 
 variables = {
     'A': 10,
@@ -954,6 +1144,30 @@ operators = {
     "$": attrdict(
         arity=1,
         call=op_dollar
+    ),
+    '&': attrdict(
+        arity=2,
+        call=op_ampersand
+    ),
+    '(': attrdict(
+        arity=1,
+        call=lambda x: dec(x) if is_number(x) or is_char(x) else uncon(x, dir='left')
+    ),
+    ')': attrdict(
+        arity=1,
+        call=lambda x: inc(x) if is_number(x) or is_char(x) else uncon(x, dir='right')
+    ),
+    '*': attrdict(
+        arity=2,
+        call=lambda x, y: simplify(x * y) if is_number(x) and is_number(y) else op_asterisk(x, y)
+    ),
+    '+': attrdict(
+        arity=2,
+        call=lambda x, y: simplify(x + y) if is_number(x) and is_number(y) else op_plus(x, y)
+    ),
+    ',': attrdict(
+        arity=1,
+        call=op_comma
     )
 }
 
