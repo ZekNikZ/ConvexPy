@@ -356,6 +356,177 @@
 		<td><code>[1 4 3 5 2]{W*}$
 		<td><code>[5 4 3 2 1]
       </tr>
+      <tr>
+        <td><code>&
+        <td>bitwise AND
+        <td>2
+		<td>x:[int|char], y:[int|char]
+		<td>Takes the bitwise AND of x and y (converted to ints).
+		<td><code>95'a&
+		<td><code>'A
+      </tr>
+      <tr>
+        <td><code>&
+        <td>set intersection
+        <td>2
+		<td>[list|str] & [list|str|num|char]
+		<td>Intersection of [list|str] and [list|str|num|char] (converted to a list).
+		<td><code>"hello""world"&
+		<td><code>"lo"
+      </tr>
+      <tr>
+        <td><code>&
+        <td>if-then
+        <td>2
+		<td>x:[!block], y:[block]
+		<td>Execute y if x is true.
+		<td><code>5"yes"{)}&
+		<td><code>6
+      </tr>
+      <tr>
+        <td><code>(
+        <td>decement
+        <td>2
+		<td>x:[num|char]
+		<td>Return x - 1.
+		<td><code>5.3(
+		<td><code>4.3
+      </tr>
+      <tr>
+        <td><code>(
+        <td>uncons from left
+        <td>2
+		<td>x:[list]
+		<td>Removes the first item of x and pushes it.
+		<td><code>[1 2 3](
+		<td><code>[2 3] 1
+      </tr>
+      <tr>
+        <td><code>)
+        <td>increment
+        <td>2
+		<td>x:[num|char]
+		<td>Return x - 1.
+		<td><code>'A)
+		<td><code>'B
+      </tr>
+      <tr>
+        <td><code>)
+        <td>uncons from right
+        <td>2
+		<td>x:[list]
+		<td>Removes the last item of x and pushes it.
+		<td><code>[1 2 3])
+		<td><code>[1 2] 3
+      </tr>
+      <tr>
+        <td><code>*
+        <td>multiply
+        <td>2
+		<td>x,y:[num]
+		<td>Multiplies x by y.
+		<td><code>1.24 5*
+		<td><code>6.2
+      </tr>
+      <tr>
+        <td><code>*
+        <td>repeat array
+        <td>2
+		<td>[list|str|char] & [num]
+		<td>Repeats [list|str|char] int([num]) times.
+		<td><code>"hi"2.5*
+		<td><code>"hihi"
+      </tr>
+      <tr>
+        <td><code>*
+        <td>repeat block
+        <td>2
+		<td>[block] & [num]
+		<td>Executes [block] int([num]) times.
+		<td><code>5{)}3*
+		<td><code>8
+      </tr>
+      <tr>
+        <td><code>*
+        <td>join
+        <td>2
+		<td>[list|str] & [list|str|char]
+		<td>Joins [list|str] with separator [list|str|char].
+		<td><code>["ab"'c"d"]"->"*
+		<td><code>"ab->c->d"
+      </tr>
+      <tr>
+        <td><code>*
+        <td>fold
+        <td>2
+		<td>[list|str] & [block]
+		<td>[list|str] folded using [block].
+		<td><code>[1 2 3 4]{+}*
+		<td><code>10
+      </tr>
+      <tr>
+        <td><code>+
+        <td>add
+        <td>2
+		<td>[num] & [num|char]
+		<td>Adds [num] and [num|char], and converts to char if necessary.
+		<td><code>'A5+
+		<td><code>'F
+      </tr>
+      <tr>
+        <td><code>+
+        <td>concat
+        <td>2
+		<td>[any] & [list|str]
+		<td>Adds [any] to [list|str].
+		<td><code>[1 2][1 3]+
+		<td><code>[1 2 1 3]
+      </tr>
+      <tr>
+        <td><code>+
+        <td>concat
+        <td>2
+		<td>x,y:[char]
+		<td>Creates a length 2 string with characters x and y.
+		<td><code>'a'b+
+		<td><code>"ab"
+      </tr>
+      <tr>
+        <td><code>,
+        <td>range [0,N)
+        <td>1
+		<td>x:[num|char]
+		<td>List/string of values 0 to x - 1.
+		<td><code>5,
+		<td><code>[0 1 2 3 4]
+      </tr>
+      <tr>
+        <td><code>,
+        <td>length
+        <td>1
+		<td>x:[list|str]
+		<td>Length of x.
+		<td><code>"test",
+		<td><code>4
+      </tr>
+      <tr>
+        <td><code>,
+        <td>filter
+        <td>2
+		<td>x:[list|str], y:[block]
+		<td>Values of x for which y is true.
+		<td><code>[2 -3 1]{0>},
+		<td><code>[2 1]
+      </tr>
+      <tr>
+        <td><code>,
+        <td>filter
+        <td>2
+		<td>x:[num], y:[block]
+		<td>Values of [0,x) for which y is true.
+		<td><code>10{3%},
+		<td><code>[1 2 4 5 7 8]
+      </tr>
     </tbody>
   </table>
   
