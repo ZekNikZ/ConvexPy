@@ -1,5 +1,5 @@
 # ConvexPy
-ConvexPy is the Python re-write of the programming langauge [Convex](https://github.com/GamrCorps/Convex), also created by me. ConvexPy is designed to be faster, more efficient, more accurate, and more. You can view the documentation [here].
+ConvexPy is the Python re-write of the programming langauge [Convex](https://github.com/GamrCorps/Convex), also created by me. ConvexPy is designed to be faster, more efficient, more accurate, and more. You can view the documentation [here](http://gamrcorps.github.io/ConvexPy).
 
 ##Running ConvexPy
 Run `convex.py` as any normal Python **3.4+** script:
