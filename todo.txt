@@ -1,52 +1,6 @@
 Misc Operators:
 
-b - base conversion
-c - convert to char
-d - convert to double
-f - for loop, map with extra parameter
-g - do-while loop that pops the condition, signum
-h - do-while loop that leaves the condition on the stack
-i - convert to integer
 j - memoized recursion
-l - read line
-q - read the whole input
-r - read token (whitespace-separated)
-s - convert to string (char array)
-t - set array item
-w - while loop
-z - zip (transpose), abs
-| - bitwise OR, set union, if-else
-¡ - factorial
-½ - halve (n/2)
-² - square (n^2)
-³ - cube (n^3)
-± - flip sign, change case
-° - convert to degrees
-þ - convert to radians
-¹ - reciprocal (1/n)
-¬ - floor, lowercase
-¯ - ceiling, uppercase
-¶ - pair
-µ - nth prime
-Ð - GCD
-´ - range ((0,N])
-æ - double duplicate
-Û - type equality (typeof(a)==typeof(b))
-× - fold with multiplication
-ª - fold with addition
-¿ - true if 0 or 1, reverse without popping
-Å - unique list
-Ä - connected unique list
-¥ - reverse array
-Ø - string formatting
-£ - random
-Ë - transliteration
-« - min
-» - max
-¸ - LCM
-¦ - Double
-Ã - input line and eval
-Â - input all and eval
 Ê - command line args (list)
 ê - command line args (separate)
 
