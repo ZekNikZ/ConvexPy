@@ -413,6 +413,152 @@ def simplify(num):
     else:
         return num
 
+
+def list_contains(list, item):
+    for i in list:
+        if check_equal(item, i):
+            return True
+    return False
+
+
+def pre_proc(list):
+    p = [-1]
+    n = 0
+    for i in range(1, len(list)):
+        if list[i] == list[n]:
+            p.append(p[n])
+        else:
+            p.append(n)
+            while True:
+                n = p[n]
+                if not (n >= 0 and list[i] != list[n]):
+                    break
+        n += 1
+    return p
+
+
+def to_new_list(x):
+    if is_list(x):
+        return x.copy()
+    return [x]
+
+
+def to_list(x):
+    if is_list(x):
+        if is_string(x):
+            result = []
+            for char in x:
+                result.append(Char(char))
+            return result
+        return x
+    else:
+        return [x]
+
+
+def check_equal(x, y):
+    if is_char(x) and is_char(y):
+        return x.char == y.char
+    if type(x) == type(y):
+        return x == y
+    if is_number(x) and is_number(y):
+        return float(x) == float(y)
+    if is_char(x) and is_number(y):
+        return x.char == int(y)
+    if is_number(x) and is_char(y):
+        return int(x) == y.char
+    return None
+
+
+def any_char(*values):
+    for item in values:
+        if is_char(item):
+            return True
+    return False
+
+
+def any_number(*values):
+    for item in values:
+        if is_number(item):
+            return True
+    return False
+
+
+def any_list(*values):
+    for item in values:
+        if is_list(item):
+            return True
+    return False
+
+
+def any_block(*values):
+    for item in values:
+        if is_block(item):
+            return True
+    return False
+
+
+def any_string(*values):
+    for item in values:
+        if is_string(item):
+            return True
+    return False
+
+
+def any_int(*values):
+    for item in values:
+        if is_int(item):
+            return True
+    return False
+
+
+def all_char(*values):
+    for item in values:
+        if not is_char(item):
+            return False
+    return True
+
+
+def all_number(*values):
+    for item in values:
+        if not is_number(item):
+            return False
+    return True
+
+
+def all_list(*values):
+    for item in values:
+        if not is_list(item):
+            return False
+    return True
+
+
+def all_string(*values):
+    for item in values:
+        if not is_string(item):
+            return False
+    return True
+
+
+def all_int(*values):
+    for item in values:
+        if not is_int(item):
+            return False
+    return True
+
+
+def fix_list(list):
+    string = True
+    for item in list:
+        if not (is_char(item) or is_string(item)):
+            string = False
+    if string:
+        temp = ''
+        for item in list:
+            temp += str(item)
+        return temp
+    return list
+
+
 """
 =======================
 Convex Runner Functions
@@ -516,16 +662,18 @@ def run(code, dump=False):
     current_line = 0
     index = 0
     while index < len(code_stack[current_line]):
-        if re.match("^-?[0-9.]+$", code_stack[current_line][index]):
+        if re.match("^-?([0-9]+\.?[0-9]*|[0-9]*\.?[0-9]+)$", code_stack[current_line][index]):
             push(to_number(code_stack[current_line][index]))
             index += 1
         elif len(code_stack[current_line][index]) == 1:
             if re.match("[A-Z¢è]", code_stack[current_line][index]):
                 push(variables[code_stack[current_line][index]])
                 index += 1
+            # Infix ops
             elif code_stack[current_line][index][0] == ':':
                 if index + 1 == len(code_stack):
                     print('Unfinished operator: \':\'')
+                    break
                 else:
                     if re.match("[A-Z¢è]", code_stack[current_line][index + 1]):
                         variables[code_stack[current_line][index + 1]] = peek()
@@ -538,10 +686,31 @@ def run(code, dump=False):
                                 push(quick_fold(pop(), code_stack[current_line][index + 1]))
                             else:
                                 print('Unhandled operator after \':\': ' + code_stack[current_line][index + 1])
+                                break
                         except KeyError:
                             raise InvalidOperatorError(code_stack[current_line][index + 1])
                     else:
                         print('Unhandled operator after \':\': ' + code_stack[current_line][index + 1])
+                        break
+                    index += 2
+            elif code_stack[current_line][index][0] == '.':
+                if index + 1 == len(code_stack):
+                    print('Unfinished operator: \'.\'')
+                    break
+                else:
+                    if code_stack[current_line][index + 1][0] == '{':
+                        block = Block(code_stack[current_line][index + 1])
+                        push(vectorize(block))
+                    elif len(code_stack[current_line][index + 1]) == 1:
+                        if operators[code_stack[current_line][index + 1]]['arity'] == 2:
+                            block = Block('{' + code_stack[current_line][index + 1] + '}')
+                            push(vectorize(block))
+                        else:
+                            print('Unhandled operator after \'.\': ' + code_stack[current_line][index + 1])
+                            break
+                    else:
+                        print('Unhandled operator after \'.\': ' + code_stack[current_line][index + 1])
+                        break
                     index += 2
             else:
                 try:
@@ -567,6 +736,10 @@ def run(code, dump=False):
     if dump:
         dump_print(stack)
         print()
+
+
+def run_block(block):
+    run(str(block)[1:len(str(block)) - 1])
 
 
 def dump_print(stack_list):
@@ -596,7 +769,7 @@ def op_tilda(obj):
         elif is_int(obj):
             return ~obj
     elif is_block(obj):
-        run(str(obj)[1:len(str(obj))-1])
+        run_block(obj)
         return None
     elif is_string(obj) or is_char(obj):
         run(str(obj))
@@ -627,7 +800,7 @@ def find_index(x, y):
                     push(Char(ord(x[i])))
                 else:
                     push(x[i])
-                run(str(y)[1:len(str(y)) - 1])
+                run_block(y)
                 if pop():
                     return i
             return -1
@@ -651,36 +824,6 @@ def find(list, sub):
     return -1
 
 
-def pre_proc(list):
-    p = [-1]
-    n = 0
-    for i in range(1, len(list)):
-        if list[i] == list[n]:
-            p.append(p[n])
-        else:
-            p.append(n)
-            while True:
-                n = p[n]
-                if not (n >= 0 and list[i] != list[n]):
-                    break
-        n += 1
-    return p
-
-
-def check_equal(x, y):
-    if is_char(x) and is_char(y):
-        return x.char == y.char
-    if type(x) == type(y):
-        return x == y
-    if is_number(x) and is_number(y):
-        return float(x) == float(y)
-    if is_char(x) and is_number(y):
-        return x.char == int(y)
-    if is_number(x) and is_char(y):
-        return int(x) == y.char
-    return get_value(x, y)
-
-
 def get_value(x, y):
     if is_list(y) and not is_list(x):
         return get_value(y, x)
@@ -696,7 +839,7 @@ def get_value(x, y):
                     push(Char(ord(x[i])))
                 else:
                     push(x[i])
-                run(str(y)[1:len(str(y)) - 1])
+                run_block(y)
                 if pop():
                     if is_string(x):
                         return Char(x[i])
@@ -714,6 +857,7 @@ def quick_map(list, op):
         push(item)
         run(op)
     pop_mark()
+    push(fix_list(pop()))
     return None
 
 
@@ -741,8 +885,9 @@ def op_percent(x, y):
             mark()
             for i in range(int(x)):
                 push(i)
-                run(str(y)[1:len(str(y)) - 1])
+                run_block(y)
             pop_mark()
+            push(fix_list(pop()))
             return None
     if is_list(x):
         if is_number(y):
@@ -751,8 +896,9 @@ def op_percent(x, y):
             mark()
             for item in x:
                 push(item)
-                run(str(y)[1:len(str(y)) - 1])
+                run_block(y)
             pop_mark()
+            push(fix_list(pop()))
             return None
         if is_list(y) or is_char(y):
             return split(x, y, False)
@@ -809,7 +955,7 @@ def op_dollar(x):
         result = []
         for item in list:
             push(item)
-            run(str(block)[1:len(str(block)) - 1])
+            run_block(block)
             result.append([item, pop()])
         l = sort(result, lambda a, b: compare(a[1], b[1]))
         r = []
@@ -821,14 +967,10 @@ def op_dollar(x):
 def compare(x, y):
     if is_list(x) and is_list(y):
         return compare_lists(x, y)
-    if is_number(x) and is_number(y):
-        if x == y:
+    if all_char(x, y) or all_number(x, y) or (any_char(x, y) and any_number(x, y)):
+        if check_equal(x, y):
             return 0
-        return -1 if x > y else 1
-    if (is_char(x) and is_number(y)) or (is_char(y) and is_number(x)) or (is_char(x) and is_char(y)):
-        if int(x) == int(y):
-            return 0
-        return -1 if int(x) > int(y) else 1
+        return -1 if float(x) > float(y) else 1
     raise TypeError("Can't compare types " + type(x) + " and " + type(y))
 
 
@@ -858,68 +1000,38 @@ def sort(list, comp=compare):
             return result
 
 
-def to_new_list(x):
-    if is_list(x):
-        return x.copy()
-    return [x]
-
-
 def op_ampersand(x, y):
-    if is_int(x) and is_int(y):
+    if all_int(x, y):
         return x & y
     if is_block(y):
         if x:
-            run(str(y)[1:len(str(y)) - 1])
+            run_block(y)
         return None
-    if is_string(x) or is_string(y):
-        if not ((is_string(x) and is_string(y)) or (is_char(x) or is_char(y))):
+    if any_string(x, y):
+        if not (all_string(x, y) or any_char(x, y)):
             raise InvalidOverloadError(x, y)
         l1 = to_list(x)
         l2 = to_list(y)
-        if is_string(l1):
-            l1 = []
-            for char in x:
-                l1.append(ord(char))
-        else:
-            l1 = [int(x)]
-        if is_string(l2):
-            l2 = []
-            for char in y:
-                l2.append(ord(char))
-        else:
-            l2 = [int(y)]
         result = op_ampersand(l1, l2)
-        string = ''
-        for i in result:
-            string += chr(i)
-        return string
-    if is_list(x) or is_list(y):
+        # string = ''
+        # for i in result:
+        #     string += chr(i)
+        # return string
+        return fix_list(result)
+    if any_list(x, y):
         result = []
         l1 = to_list(x)
         l2 = to_list(y)
-        print(l1, l2)
         for item in l1:
             try:
-                if l2.__contains__(item) and not result.__contains__(item):
+                if list_contains(l2, item) and not list_contains(result, item):
                     result.append(item)
             except ValueError:
                 pass
         return result
-    if (is_char(x) and is_number(y)) or (is_char(y) and is_number(x)) or (is_char(x) and is_char(y)):
+    if all_char(x, y) or (any_char(x, y) and any_number(x, y)):
         return Char(int(x) & int(y))
     raise InvalidOverloadError(x, y)
-
-
-def to_list(x):
-    if is_list(x):
-        if is_string(x):
-            result = []
-            for char in x:
-                result.append(Char(char))
-            return result
-        return x
-    else:
-        return [x]
 
 
 def inc(x):
@@ -961,14 +1073,14 @@ def op_asterisk(x, y):
         return x * int(y)
     if is_block(x) and is_number(y):
         for _ in range(int(y)):
-            run(str(x)[1:len(str(x)) - 1])
+            run_block(x)
         return None
     if is_list(x):
         if is_block(y):
             push(x[0])
             for i in range(1, len(x)):
                 push(x[i])
-                run(str(y)[1:len(str(y)) - 1])
+                run_block(y)
             return None
         if is_list(y) or is_char(y):
             result = [x[0]]
@@ -976,33 +1088,15 @@ def op_asterisk(x, y):
             for i in range(1, len(x)):
                 result += l
                 result.append(x[i])
-            string = True
-            for item in result:
-                if not(is_char(item) or is_string(item)):
-                    string = False
-            if string:
-                temp = ''
-                for item in result:
-                    temp += str(item)
-                return temp
-            return result
+            return fix_list(result)
     raise InvalidOverloadError(x, y)
 
 
 def op_plus(x, y):
-    if (is_list(x) or is_list(y)) or (is_char(x) and is_char(y)):
+    if (is_list(x) or is_list(y)) or all_char(x, y):
         result = to_list(x) + to_list(y)
-        string = True
-        for item in result:
-            if not is_char(item):
-                string = False
-        if string:
-            temp = ''
-            for item in result:
-                temp += str(item)
-            return temp
-        return result
-    if (is_char(x) and is_number(y)) or (is_char(y) and is_number(x)):
+        return fix_list(result)
+    if any_char(x, y) and any_number(x, y):
         return Char(int(x) + int(y))
     raise InvalidOverloadError(x, y)
 
@@ -1023,28 +1117,151 @@ def op_comma(x):
             result = []
             for item in y:
                 push(item)
-                run(str(x)[1:len(str(x)) - 1])
+                run_block(x)
                 if pop():
                     result.append(item)
-            for item in result:
-                if not is_char(item):
-                    string = False
-            if string:
-                temp = ''
-                for item in result:
-                    temp += str(item)
-                return temp
-            return result
+            return fix_list(result)
         if is_number(y):
             result = []
             for i in range(y):
                 push(i)
-                run(str(x)[1:len(str(x)) - 1])
+                run_block(x)
                 if pop():
                     result.append(i)
             return result
         raise InvalidOverloadError(y, x)
     raise InvalidOverloadError(x)
+
+
+def op_minus(x, y):
+    if all_char(x, y):
+        return int(x) - int(y)
+    if any_char(x, y) and any_number(x, y):
+        return Char(int(x) - int(y))
+    if any_list(x, y):
+        if any_block(x, y):
+            raise InvalidOverloadError(x, y)
+        result = [z for z in to_list(x) if not list_contains(to_list(y), z)]
+        return fix_list(result)
+    raise InvalidOverloadError(x, y)
+
+
+def vectorize(block):
+    y = pop()
+    x = pop()
+    if not all_list(x, y):
+        raise InvalidOverloadError(x, y)
+    xl = to_list(x)
+    xn = len(xl)
+    yl = to_list(y)
+    yn = len(yl)
+    mark()
+    for i in range(max(xn, yn)):
+        if i < xn:
+            push(xl[i])
+            if i < yn:
+                push(yl[i])
+                run_block(block)
+        else:
+            push(yl[i])
+    pop_mark()
+
+
+def op_fslash(x, y):
+    if is_block(x):
+        if is_block(y):
+            raise InvalidOverloadError(x, y)
+        return op_fslash(y, x)
+    if is_number(x):
+        if is_list(y):
+            return op_fslash(y, x)
+        if is_block(y):
+            for i in range(x):
+                push(i)
+                run_block(y)
+            return None
+    if is_list(x):
+        if is_block(y):
+            for item in to_list(x):
+                push(item)
+                run_block(y)
+            return None
+        if is_list(y) or is_char(y):
+            return split(x, y, True)
+        if is_number(y):
+            if y <= 0:
+                raise IndexError("split size out of range")
+            result = []
+            for i in range(0, len(x), y):
+                result.append(x[i:min(i + y, len(x))])
+            return result
+    raise InvalidOverloadError(x, y)
+
+
+def op_lt(x, y):
+    if is_number(x) and is_list(y):
+        return op_lt(y, x)
+    if is_list(x) and is_number(y):
+        return x[:y % len(x)]
+    return compare(x, y) > 0
+
+
+def op_gt(x, y):
+    if is_number(x) and is_list(y):
+        return op_gt(y, x)
+    if is_list(x) and is_number(y):
+        return x[y % len(x):]
+    return compare(x, y) < 0
+
+
+def op_ternary(x, y, z):
+    o = y if x else z
+    if is_block(o):
+        run_block(o)
+        return None
+    return o
+
+
+def stack_rotate(x, y, z):
+    push(y)
+    push(z)
+    push(x)
+    return None
+
+
+def stack_swap(x, y):
+    push(y)
+    push(x)
+    return None
+
+
+def op_caret(x, y):
+    if all_int(x, y):
+        return x ^ y
+    if any_list(x, y):
+        if any_block(x, y):
+            raise InvalidOverloadError(x, y)
+        result = []
+        l1 = to_list(x)
+        l2 = to_list(y)
+        for item in l1:
+            try:
+                if not list_contains(l2, item) and not list_contains(result, item):
+                    result.append(item)
+            except ValueError:
+                pass
+        for item in l2:
+            try:
+                if not list_contains(l1, item) and not list_contains(result, item):
+                    result.append(item)
+            except ValueError:
+                pass
+        return fix_list(result)
+    if all_char(x, y):
+        return int(x) ^ int(y)
+    if any_char(x, y) and any_int(x, y):
+        return Char(int(x) ^ int(y))
+    raise InvalidOverloadError(x, y)
 
 
 variables = {
@@ -1127,7 +1344,7 @@ operators = {
     ),
     '=': attrdict(
         arity=2,
-        call=check_equal
+        call=lambda x, y: check_equal(x, y) if check_equal(x, y) is not None else get_value(x, y)
     ),
     'o': attrdict(
         arity=1,
@@ -1159,15 +1376,47 @@ operators = {
     ),
     '*': attrdict(
         arity=2,
-        call=lambda x, y: simplify(x * y) if is_number(x) and is_number(y) else op_asterisk(x, y)
+        call=lambda x, y: simplify(x * y) if all_number(x, y) else op_asterisk(x, y)
     ),
     '+': attrdict(
         arity=2,
-        call=lambda x, y: simplify(x + y) if is_number(x) and is_number(y) else op_plus(x, y)
+        call=lambda x, y: simplify(x + y) if all_number(x, y) else op_plus(x, y)
     ),
     ',': attrdict(
         arity=1,
         call=op_comma
+    ),
+    '-': attrdict(
+        arity=2,
+        call=lambda x, y: simplify(x - y) if all_number(x, y) else op_minus(x, y)
+    ),
+    '/': attrdict(
+        arity=2,
+        call=lambda x, y: simplify(x / y) if all_number(x, y) else op_fslash(x, y)
+    ),
+    '<': attrdict(
+        arity=2,
+        call=op_lt
+    ),
+    '>': attrdict(
+        arity=2,
+        call=op_gt
+    ),
+    '?': attrdict(
+        arity=3,
+        call=op_ternary
+    ),
+    '@': attrdict(
+        arity=3,
+        call=stack_rotate
+    ),
+    '\\': attrdict(
+        arity=2,
+        call=stack_swap
+    ),
+    '^': attrdict(
+        arity=2,
+        call=op_caret
     )
 }
 

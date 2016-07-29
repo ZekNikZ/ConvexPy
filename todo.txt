@@ -1,15 +1,5 @@
 Misc Operators:
 
-, - range([0,N)), length, filter
-- - subtract, remove
-. - vectorize
-/ - divide, split, each
-< - compare (less), slice before
-> - compare (greater), slice from
-? - if (ternary)
-@ - rotate top 3 elements on the stack
-\ - swap top 2 elements on the stack
-^ - bitwise XOR, symmetric difference
 b - base conversion
 c - convert to char
 d - convert to double

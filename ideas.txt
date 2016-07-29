@@ -7,3 +7,4 @@ fold by division
 fold by subtraction
 discard first element
 discard last element
+parse, discard rest ("a12{34}\"t5\" -> [12 {34} "t5])
