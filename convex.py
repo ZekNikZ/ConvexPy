@@ -594,6 +594,38 @@ def pair(x, y):
     return [x, y]
 
 
+def find_index(x, y):
+    if is_list(x):
+        if is_block(y):
+            for i in range(len(x)):
+                if is_string(x):
+                    push(Char(ord(x[i])))
+                else:
+                    push(x[i])
+                run_block(y)
+                if pop():
+                    return i
+            return -1
+        return find(x, y) if is_list(y) else x.index(y)
+    if is_list(y):
+        if is_block(x):
+            return find_index(y, x)
+        return y.index(x)
+    raise InvalidOverloadError(x, y)
+
+
+def find(list, sub):
+    p = pre_proc(sub)
+    m = 0
+    for i in range(len(list)):
+        while m >= 0 and sub[m] != list[i]:
+            m = p[m]
+        if m == len(sub) - 1:
+            return i - m
+        m += 1
+    return -1
+
+
 """
 =======================
 Convex Runner Functions
@@ -761,26 +793,26 @@ def run(code, dump=False):
                     break
                 else:
                     if re.match("^[A-Z¢è]$", code_stack[current_line][index + 1]):
-                        var = code_stack[current_line][index + 1]
+                        var = code_stack[current_line][index + 1][0]
                         y = pop()
                         x = pop()
                         if is_block(y):
                             if is_number(x):
                                 for i in range(int(x)):
-                                    variables[code_stack[current_line][index + 1]] = i
+                                    variables[var] = i
                                     run_block(y)
                             elif is_list(x):
                                 for i in to_list(x):
-                                    variables[code_stack[current_line][index + 1]] = i
+                                    variables[var] = i
                                     run_block(y)
                         elif is_block(x):
                             if is_number(y):
                                 for i in range(int(y)):
-                                    variables[code_stack[current_line][index + 1]] = i
+                                    variables[var] = i
                                     run_block(x)
                             elif is_list(y):
                                 for i in to_list(y):
-                                    variables[code_stack[current_line][index + 1]] = i
+                                    variables[var] = i
                                     run_block(x)
                         else:
                             raise InvalidOverloadError(x, y, 'f')
@@ -808,6 +840,22 @@ def run(code, dump=False):
                         else:
                             raise InvalidOverloadError(x, y, 'f')
                     index += 2
+            elif code_stack[current_line][index][0] == 'u':
+                if not is_number(peek()):
+                    raise InvalidOverloadError(peek(), 'u')
+                current_line = int(pop())
+                index = 0
+            elif code_stack[current_line][index][0] == 'v':
+                y = pop()
+                x = pop()
+                if not (any_list(x, y)):
+                    raise InvalidOverloadError(x, y, 'v')
+                if is_list(y):
+                    z = find_index(y, x)
+                else:
+                    z = find_index(x, y)
+                current_line = int(z)
+                index = 0
             else:
                 try:
                     last_op = code_stack[current_line][index]
@@ -886,38 +934,6 @@ def wrap_stack():
 
 def power(x, y):
     return simplify(x ** y)
-
-
-def find_index(x, y):
-    if is_list(x):
-        if is_block(y):
-            for i in range(len(x)):
-                if is_string(x):
-                    push(Char(ord(x[i])))
-                else:
-                    push(x[i])
-                run_block(y)
-                if pop():
-                    return i
-            return -1
-        return find(x, y) if is_list(y) else x.index(y)
-    if is_list(y):
-        if is_block(x):
-            return find_index(y, x)
-        return y.index(x)
-    raise InvalidOverloadError(x, y)
-
-
-def find(list, sub):
-    p = pre_proc(sub)
-    m = 0
-    for i in range(len(list)):
-        while m >= 0 and sub[m] != list[i]:
-            m = p[m]
-        if m == len(sub) - 1:
-            return i - m
-        m += 1
-    return -1
 
 
 def get_value(x, y):
