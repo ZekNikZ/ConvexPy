@@ -7,6 +7,7 @@ mpmath.mp.dps = 10000
 last_op = 'N/A'
 safe_mode = False
 debug_mode = False
+CONVEX_VERSION = "0.6.2"
 
 
 """
@@ -2082,7 +2083,7 @@ operators = {
 
 
 if len(sys.argv) == 1:
-    print("Not enough arguments.\nFor Help: python convex.py --help")
+    print("Not enough arguments.\nFor help use the -help flag.")
 else:
     index = 1
     while index < len(sys.argv):
@@ -2168,3 +2169,10 @@ else:
         elif sys.argv[index] in ("-debug", "-d"):
             debug_mode = True
             index += 1
+        elif sys.argv[index] in ("-version", "-v"):
+            print("Convex Version: " + CONVEX_VERSION)
+            index += 1
+        else:
+            print("Invalid argument: " + sys.argv[index])
+            print("For help use the -help flag.")
+            break
