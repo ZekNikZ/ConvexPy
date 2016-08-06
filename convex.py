@@ -7,7 +7,7 @@ mpmath.mp.dps = 10000
 last_op = 'N/A'
 safe_mode = False
 debug_mode = False
-CONVEX_VERSION = "0.6.2"
+CONVEX_VERSION = "0.6.3"
 
 
 """
@@ -2090,7 +2090,7 @@ else:
         if sys.argv[index] in ("-help", "-h", "-?"):
             print("Convex Help")
             print()
-            print("Usage: python convex.py [-flag] <program>")
+            print("Usage: convex [-flag] <program>")
             print()
             print("Flags:")
             print("-help: display the usage information of this program.")
@@ -2113,7 +2113,7 @@ else:
             index += 1
         elif sys.argv[index] in ("-accuracy", "-a"):
             if index + 1 == len(sys.argv):
-                print("Not enough arguments.\nFor Help: python convex.py -help")
+                print("Not enough arguments.\nFor help use the -help flag.")
                 break
             else:
                 if 'k' in sys.argv[index + 1] or 'm' in sys.argv[index + 1]:
@@ -2123,7 +2123,7 @@ else:
                 index += 2
         elif sys.argv[index] in ("-file", "-f"):
             if index + 1 == len(sys.argv):
-                print("Not enough arguments.\nFor Help: python convex.py --help")
+                print("Not enough arguments.\nFor help use the -help flag.")
                 break
             else:
                 file = open(sys.argv[index + 1])
@@ -2133,7 +2133,7 @@ else:
                 index += 2
         elif sys.argv[index] in ("-code", "-c"):
             if index + 1 == len(sys.argv):
-                print("Not enough arguments.\nFor Help: python convex.py --help")
+                print("Not enough arguments.\nFor help use the -help flag.")
                 break
             else:
                 run(sys.argv[index + 1], True)
@@ -2173,6 +2173,6 @@ else:
             print("Convex Version: " + CONVEX_VERSION)
             index += 1
         else:
-            print("Invalid argument: " + sys.argv[index])
+            print("Invalid flag: " + sys.argv[index])
             print("For help use the -help flag.")
             break
