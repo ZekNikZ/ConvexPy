@@ -1088,9 +1088,11 @@ def compare(x, y):
 
 
 def compare_lists(x, y):
-    n = min(len(x), len(y))
+    a = to_list(x)
+    b = to_list(y)
+    n = min(len(a), len(b))
     for i in range(n):
-        z = compare(x[i], y[i])
+        z = compare(a[i], b[i])
         if z:
             return z
     return len(x) - len(y)
@@ -1740,9 +1742,9 @@ def transliterate(x, y, z):
 
 
 def double(x):
-    if not is_number(x):
-        raise InvalidOverloadError(x)
-    return simplify(x * 2)
+    if is_number(x) or is_list(x):
+        return simplify(x * 2)
+    raise InvalidOverloadError(x)
 
 
 variables = {
@@ -2045,7 +2047,7 @@ operators = {
     ),
     'Ø': attrdict(
         arity=2,
-        call=lambda x, y: x.format(y) if is_string(x) else y.format(x)
+        call=lambda x, y: x.format(*(y if is_list(y) else [y])) if is_string(x) else y.format(*(x if is_list(x) else [x]))
     ),
     '£': attrdict(
         arity=1,

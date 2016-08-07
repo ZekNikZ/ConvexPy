@@ -1,5 +1,6 @@
 Misc Operators:
 
+m
 j - memoized recursion
 Ê - command line args (list)
 ê - command line args (separate)
