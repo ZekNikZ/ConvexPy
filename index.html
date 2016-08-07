@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Convex Documentation</title>
+  <title>ConvexPy Documentation</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
@@ -21,7 +21,7 @@
 <body>
 
 <div class="container">
-  <h1>Convex P.0.X Documentation</h1>
+  <h1>ConvexPy 0.6.4 Documentation</h1>
   <h4><span class="label label-danger">Not Fully Implemented</span> <span class="label label-warning">Requires Unsafe Mode</span></h4>
   
   <h2>Types</h2>
@@ -88,7 +88,16 @@
     <tbody>
       <tr>
         <td><code> 
-        <td>no-op
+        <td>no-op (space)
+        <td>0
+		<td>
+		<td>Does nothing.
+		<td><code> 
+		<td><code>
+      </tr>
+	  <tr>
+        <td><code>	
+        <td>no-op (tab)
         <td>0
 		<td>
 		<td>Does nothing.
@@ -188,8 +197,8 @@
 	  <tr>
         <td><code>_
         <td>duplicate
-        <td>1
-		<td>[any]
+        <td>0
+		<td>
 		<td>Duplicates the top item on the stack.
 		<td><code>2_
 		<td><code>2 2
@@ -496,7 +505,7 @@
         <td>range [0,N)
         <td>1
 		<td>x:[num|char]
-		<td>List/string of values 0 to x - 1.
+		<td>List or string of values 0 to x - 1.
 		<td><code>5,
 		<td><code>[0 1 2 3 4]
       </tr>
@@ -527,7 +536,816 @@
 		<td><code>10{3%},
 		<td><code>[1 2 4 5 7 8]
       </tr>
-    </tbody>
+	  <tr>
+        <td><code>-
+        <td>subtract
+        <td>2
+		<td>x:[num|char], y:[num|char]
+		<td>Returns x - y, converting to char if only one of x or y is a char.
+		<td><code>'D3-
+		<td><code>'A
+      </tr>
+	  <tr>
+        <td><code>-
+        <td>remove
+        <td>2
+		<td>[list|str] & [num|char]
+		<td>[list|str] without occurrences of [num|char]. 
+		<td><code>[1 2 3 2 1]2-
+		<td><code>[1 3 1]
+      </tr>
+	  <tr>
+        <td><code>-
+        <td>remove
+        <td>2
+		<td>x,y:[list|str]
+		<td>x without any items in y.
+		<td><code>"hello""hl"-
+		<td><code>"eo"
+      </tr>
+	  <tr>
+        <td><code>/
+        <td>divide
+        <td>2
+		<td>x,y:[num]
+		<td>Divides x by y. Performs integer division if both are integers. 
+		<td><code>9 1.2/
+		<td><code>7.5
+      </tr>
+	  <tr>
+        <td><code>/
+        <td>split with empty parts
+        <td>2
+		<td>x:[list|str], y:[list|str|char]
+		<td>Splits x around y.
+		<td><code>[1 2 3 1 2 4][1 2]/
+		<td><code>[[] [3] [4]]
+      </tr>
+	  <tr>
+        <td><code>/
+        <td>split by length
+        <td>2
+		<td>[list|str] & [num]
+		<td>Splits [list|str] into pieces of length [num].
+		<td><code>"hello"2/
+		<td><code>["he" "ll" "o"]
+      </tr>
+	  <tr>
+        <td><code>/
+        <td>for each
+        <td>2
+		<td>[list|str] & [block]
+		<td>Run [block] for each item of [list|str].
+		<td><code>{1}"abc"/
+		<td><code>'a 1 'b 1 'c 1
+      </tr>
+	  <tr>
+        <td><code>/
+        <td>for each
+        <td>2
+		<td>[num] & [block]
+		<td>Run [block] for each integer in the range [0, [num]).
+		<td><code>3{_}/
+		<td><code>0 0 1 1 2 2
+      </tr>
+	  <tr>
+        <td><code><
+        <td>less than
+        <td>2
+		<td>x:[num|char], y:[num|char]
+		<td>Returns 1 if x < y by numeric value, 0 otherwise.
+		<td><code>2 3<
+		<td><code>1
+      </tr>
+	  <tr>
+        <td><code><
+        <td>less than
+        <td>2
+		<td>x:[list|str], y:[list|str]
+		<td>Returns 1 if x < y by lexicographic value, 0 otherwise.
+		<td><code>"abc""ad"<
+		<td><code>1
+      </tr>
+	  <tr>
+        <td><code><
+        <td>slice before
+        <td>2
+		<td>[list|str] & [num]
+		<td>[list|str] sliced from indices 0 to [num] - 1, inclusive.
+		<td><code>-3"test123"<
+		<td><code>"test"
+      </tr>
+	  <tr>
+        <td><code>>
+        <td>greater then
+        <td>2
+		<td>x:[num|char], y:[num|char]
+		<td>Returns 1 if x > y by numeric value, 0 otherwise.
+		<td><code>'A65>
+		<td><code>0
+      </tr>
+	  <tr>
+        <td><code>>
+        <td>greater than
+        <td>2
+		<td>x:[list|str], y:[list|str]
+		<td>Returns 1 if x > y by lexicographic value, 0 otherwise.
+		<td><code>"abc""ad">
+		<td><code>0
+      </tr>
+	  <tr>
+        <td><code>>
+        <td>slice before
+        <td>2
+		<td>[list|str] & [num]
+		<td>[list|str] sliced from indices 0 to [num] - 1, inclusive.
+		<td><code>"test123"5>
+		<td><code>"23"
+      </tr>
+	  <tr>
+        <td><code>?
+        <td>if-then-else
+        <td>3
+		<td>x:[!block], y,z:[any]
+		<td>y if x is true, otherwise z.
+		<td><code>[]"yes"{'n_)+}?
+		<td><code>"no"
+      </tr>
+	  <tr>
+        <td><code>@
+        <td>rotate 3
+        <td>3
+		<td>x,y,z:[any]
+		<td>Pushes y, z, and x to the stack in that order.
+		<td><code>12"foo"{)}@
+		<td><code>"foo"{)}12
+      </tr>
+	  <tr>
+        <td><code>\
+        <td>swap
+        <td>2
+		<td>x,y:[any]
+		<td>Pushes y, x to the stack in that order.
+		<td><code>5"hi"\
+		<td><code>"hi"5
+      </tr>
+	  <tr>
+        <td><code>^
+        <td>XOR
+        <td>2
+		<td>x,y:[num|char]
+		<td>Pushes x ^ y.
+		<td><code>5 3^
+		<td><code>6
+      </tr>
+	  <tr>
+        <td><code>^
+        <td>XOR
+        <td>2
+		<td>[num] & [char]
+		<td>Pushes x ^ y, converted to a char.
+		<td><code>'A3^
+		<td><code>'B
+      </tr>
+	  <tr>
+        <td><code>^
+        <td>Symmetric set difference
+        <td>2
+		<td>x,y:[list|str]
+		<td>Symmetric set difference of x and y.
+		<td><code>"hello""hi"^
+		<td><code>"eloi"
+      </tr>
+	  <tr>
+        <td><code>^
+        <td>Symmetric set difference
+        <td>2
+		<td>[list|str] & [num|char]
+		<td>Symmetric set difference of [list|str] and [[num|char]].
+		<td><code>'l"hello"^
+		<td><code>"heo"
+      </tr>
+	  <tr>
+        <td><code>b
+        <td>convert to base
+        <td>2
+		<td>x,y:[int]
+		<td>x converted to a list of digits in base y.
+		<td><code>11 2b
+		<td><code>[1 0 1 1]
+      </tr>
+	  <tr>
+        <td><code>b
+        <td>convert from base
+        <td>2
+		<td>[list|str] & [int]
+		<td>[list|str] converted from base [int].
+		<td><code>100"123"b
+		<td><code>495051
+      </tr>
+	  <tr>
+        <td><code>c
+        <td>convert to char
+        <td>1
+		<td>x:[num]
+		<td>Returns the character with unicode code-point x.
+		<td><code>9786c
+		<td><code>'☺
+      </tr>
+	  <tr>
+        <td><code>c
+        <td>convert to char
+        <td>1
+		<td>x:[str]
+		<td>Returns the first character of x.
+		<td><code>"test"c
+		<td><code>'t
+      </tr>
+	  <tr>
+        <td><code>d
+        <td>convert to float
+        <td>1
+		<td>x:[num|char]
+		<td>Returns the float value of x.
+		<td><code>'ád
+		<td><code>225.0
+      </tr>
+	  <tr>
+        <td><code>d
+        <td>parse to float
+        <td>1
+		<td>x:[str]
+		<td>Parse x as a float.
+		<td><code>"1.23e1"d
+		<td><code>12.3
+      </tr>
+	  <tr>
+        <td><code>e
+        <td>scientific notation
+        <td>1 + i (2)
+		<td>x:[num], i:[num literal]
+		<td>Returns x*10^i.
+		<td><code>2.5e-4
+		<td><code>0.00025
+      </tr>
+	  <tr>
+        <td><code>f
+        <td>for loop
+        <td>2 + i (3)
+		<td>[list|str] & [block], i:[var]
+		<td>For i in [list|string] execute [block].
+		<td><code>[5 3]{2X#}fX
+		<td><code>32 8
+      </tr>
+	  <tr>
+        <td><code>f
+        <td>for loop
+        <td>2 + i (3)
+		<td>[num] & [block], i:[var]
+		<td>For i in [0, [num]) execute [block].
+		<td><code>{12T)/}4fT
+		<td><code>12 6 4 3
+      </tr>
+	  <tr>
+        <td><code>f
+        <td>map
+        <td>2 + i (3)
+		<td>x:[list|str], y:[any], i:[block|op(arity=2)]
+		<td>Array of the results of (x y i) for each value of x.
+		<td><code>[4 5 6]2f+
+		<td><code>[6 7 8]
+      </tr>
+	  <tr>
+        <td><code>f
+        <td>map
+        <td>2 + i (3)
+		<td>x:[!list|str], y:[list|str], i:[block|op(arity=2)]
+		<td>Array of the results of (x y i) for each value of x.
+		<td><code>10[2 3]f{/2+}
+		<td><code>[7 5]
+      </tr>
+	  <tr>
+        <td><code>g
+        <td>do while loop (popping condition)
+        <td>1
+		<td>x:[block]
+		<td>Execute x until the top of the stack (popped) is true.
+		<td><code>1{A*A(:A}g
+		<td><code>3628800
+      </tr>
+	  <tr>
+        <td><code>g
+        <td>sign
+        <td>1
+		<td>x:[num]
+		<td>Sign of x.
+		<td><code>-123g
+		<td><code>-1
+      </tr>
+	  <tr class="warning">
+        <td><code>g
+        <td>get from URL
+        <td>1
+		<td>x:[str]
+		<td>Downloads a file or page from a URL into a string. If there is no protocol, HTTP is assumed.
+		<td><code>"aditsu.net/hi.txt"g
+		<td><code>"hello :)"
+      </tr>
+	  <tr>
+        <td><code>h
+        <td>do while loop (peeking condition)
+        <td>1
+		<td>x:[block]
+		<td>Execute x until the top of the stack is true.
+		<td><code>18{_2/}h
+		<td><code>18 9 4 2 1 0
+      </tr>
+	  <tr>
+        <td><code>i
+        <td>convert to int
+        <td>1
+		<td>x:[num|char]
+		<td>Returns the integer value of x.
+		<td><code>-1.56i
+		<td><code>-1
+      </tr>
+	  <tr>
+        <td><code>i
+        <td>parse to int
+        <td>1
+		<td>x:[str]
+		<td>Parse x as a float.
+		<td><code>"1234"i
+		<td><code>1234
+      </tr>
+	  <tr>
+        <td><code>l
+        <td>read line
+        <td>0
+		<td>
+		<td>Reads a line from STDIN and puts it into a string.
+		<td>Input: <code>test input<br>123</code>, Code: <code>l
+		<td><code>"test input"
+      </tr>
+	  <tr>
+        <td><code>o
+        <td>print
+        <td>1
+		<td>x:[any]
+		<td>Prints the x to STDOUT.
+		<td><code>["foo"1.23[4'5]]o
+		<td>STDOUT: <code>foo1.2345
+      </tr>
+	  <tr>
+        <td><code>p
+        <td>print string representation and linefeed
+        <td>1
+		<td>x:[any]
+		<td>Prints the string representation of x to STDOUT with a trailing linefeed.
+		<td><code>["foo"1.23[4'5]]p
+		<td>STDOUT: <code>["foo" 1.23 [4 '5]]
+      </tr>
+	  <tr>
+        <td><code>q
+        <td>read all
+        <td>0
+		<td>
+		<td>Reads the entirety of STDIN and puts it into a string.
+		<td>Input: <code>test input<br>123</code>, Code: <code>q
+		<td><code>"test input<br>123"
+      </tr>
+	  <tr>
+        <td><code>r
+        <td>read token
+        <td>0
+		<td>
+		<td>Reads a token of STDIN (separated by whitespace) and puts it into a string.
+		<td>Input: <code>test input<br>123</code>, Code: <code>r
+		<td><code>"test"
+      </tr>
+	  <tr>
+        <td><code>s
+        <td>convert to string
+        <td>1
+		<td>x:[any]
+		<td>Reads a token of STDIN (separated by whitespace) and puts it into a string.
+		<td><code>["foo"1.23[4'5]]s
+		<td><code>"foo1.2345"
+      </tr>
+	  <tr>
+        <td><code>t
+        <td>set array item
+        <td>3
+		<td>[list|str] & [int], z:[any]
+		<td>Changes in place the value of [list|str] at index [int] to z.
+		<td><code>[5 6 7]2 3t
+		<td><code>[5 6 3]
+      </tr>
+	  <tr>
+        <td><code>u
+        <td>goto line
+        <td>1
+		<td>x:[num]
+		<td>Changes the position of the pointer to the first character of line x.
+		<td><code>123 1u<br>)
+		<td><code>124
+      </tr>
+	  <tr>
+        <td><code>v
+        <td>goto line by index
+        <td>2
+		<td>[any] & [list|str]
+		<td>Changes the position of the pointer to the first character of line number corresponding to the index of [any] in [list|str].
+		<td><code>"test"34[12 34]v<br>2/
+		<td><code>["te" "st"]
+      </tr>
+	  <tr>
+        <td><code>w
+        <td>while loop
+        <td>2
+		<td>x,y:[block]
+		<td>While x is true execute y.
+		<td><code>3{_}{_(}w
+		<td><code>3 2 1 0
+      </tr>
+	  <tr>
+        <td><code>z
+        <td>transpose
+        <td>1
+		<td>x:[list|str]
+		<td>Transposes rows with columns of x, as if it is a 2D list.
+		<td><code>[[1 2][3 4 5]]z
+		<td><code>[[1 3] [2 4] [5]]
+      </tr>
+	  <tr>
+        <td><code>|
+        <td>bitwise OR
+        <td>2
+		<td>x:[int|char], y:[int|char]
+		<td>Returns x | y, converted to a char if x or y is a char.
+		<td><code>3'a|
+		<td><code>'c
+      </tr>
+	  <tr>
+        <td><code>|
+        <td>set union
+        <td>2
+		<td>x:[list|str|num|char], y:[list|str|num|char]
+		<td>Union of x and y.
+		<td><code>3[2 3 3 4]|
+		<td><code>[3 2 4]
+      </tr>
+	  <tr>
+        <td><code>¡
+        <td>factorial
+        <td>1
+		<td>x:[num]
+		<td>Factorial of x, via Γ(x+1)
+		<td><code>15¡
+		<td><code>1307674368000
+      </tr>
+	  <tr>
+        <td><code>½
+        <td>halve
+        <td>1
+		<td>x:[num]
+		<td>Returns x / 2.
+		<td><code>7½
+		<td><code>3.5
+      </tr>
+	  <tr>
+        <td><code>²
+        <td>square
+        <td>1
+		<td>x:[num]
+		<td>Returns x ^ 2.
+		<td><code>5²
+		<td><code>25
+      </tr>
+	  <tr>
+        <td><code>³
+        <td>cube
+        <td>1
+		<td>x:[num]
+		<td>Returns x ^ 3.
+		<td><code>2³
+		<td><code>8
+      </tr>
+	  <tr>
+        <td><code>±
+        <td>flip sign
+        <td>1
+		<td>x:[num]
+		<td>Returns -x.
+		<td><code>4±
+		<td><code>-4
+      </tr>
+	  <tr>
+        <td><code>±
+        <td>flip case
+        <td>1
+		<td>x:[str|char]
+		<td>Returns x with each character of the opposite case.
+		<td><code>"aBc"±
+		<td><code>"AbC"
+      </tr>
+	  <tr>
+        <td><code>°
+        <td>convert to degrees
+        <td>1
+		<td>x:[num]
+		<td>Converts x from radians to degrees.
+		<td><code>17°
+		<td><code>974.0282517223995
+      </tr>
+	  <tr>
+        <td><code>þ
+        <td>convert to radians
+        <td>1
+		<td>x:[num]
+		<td>Converts x from degrees to radians.
+		<td><code>17þ
+		<td><code>0.29670597283903605
+      </tr>
+	  <tr>
+        <td><code>¹
+        <td>reciprocal
+        <td>1
+		<td>x:[num]
+		<td>Returns x ^ -1.
+		<td><code>2¹
+		<td><code>0.5
+      </tr>
+	  <tr>
+        <td><code>¬
+        <td>floor
+        <td>1
+		<td>x:[num]
+		<td>Integer part (floor) of x.
+		<td><code>8.57¬
+		<td><code>8
+      </tr>
+	  <tr>
+        <td><code>¬
+        <td>lowercase
+        <td>1
+		<td>x:[str|char]
+		<td>Lowercase version of x.
+		<td><code>'T¬
+		<td><code>'t
+      </tr>
+	  <tr>
+        <td><code>¯
+        <td>ceiling
+        <td>1
+		<td>x:[num]
+		<td>Ceiling of x.
+		<td><code>8.57¯
+		<td><code>9
+      </tr>
+	  <tr>
+        <td><code>¯
+        <td>uppercase
+        <td>1
+		<td>x:[str|char]
+		<td>Uppercase version of x.
+		<td><code>"teST"¯
+		<td><code>"TEST"
+      </tr>
+	  <tr>
+        <td><code>¶
+        <td>pair
+        <td>2
+		<td>x,y:[any]
+		<td>Array of [x y].
+		<td><code>1 2 3¶
+		<td><code>1 [2 3]
+      </tr>
+	  <tr>
+        <td><code>µ
+        <td>n-th prime
+        <td>1
+		<td>x:[num]
+		<td>Returns the x-th prime number.
+		<td><code>3µ
+		<td><code>7
+      </tr>
+	  <tr>
+        <td><code>Ð
+        <td>GCD
+        <td>2
+		<td>x,y:[num]
+		<td>GCD of x and y.
+		<td><code>3 6Ð
+		<td><code>3
+      </tr>
+	  <tr>
+        <td><code>´
+        <td>GCD
+        <td>1
+		<td>x:[num]
+		<td>Range of [1, x].
+		<td><code>3´
+		<td><code>[1 2 3]
+      </tr>
+	  <tr>
+        <td><code>æ
+        <td>double duplicate
+        <td>0
+		<td>
+		<td>Duplicates the top two items on the stack.
+		<td><code>1 2 3æ
+		<td><code>1 2 3 2 3
+      </tr>
+	  <tr>
+        <td><code>Û
+        <td>type equality
+        <td>2
+		<td>x,y:[any]
+		<td>Tests if the types of x and y are the same.
+		<td><code>4 6Û
+		<td><code>1
+      </tr>
+	  <tr>
+        <td><code>×
+        <td>fold by multiplication
+        <td>1
+		<td>x:[list]
+		<td>Folds x using the * operator.
+		<td><code>[1 2 3 4]×
+		<td><code>24
+      </tr>
+	  <tr>
+        <td><code>ª
+        <td>fold by multiplication
+        <td>1
+		<td>x:[list]
+		<td>Folds x using the + operator.
+		<td><code>[1 2 3 4]ª
+		<td><code>10
+      </tr>
+	  <tr>
+        <td><code>¿
+        <td>equal to 0 or 1
+        <td>1
+		<td>x:[num]
+		<td>Returns 1 if x is 0 or 1, 0 otherwise.
+		<td><code>2¿
+		<td><code>0
+      </tr>
+	  <tr>
+        <td><code>¿
+        <td>reverse without popping
+        <td>1
+		<td>x:[list|str]
+		<td>Reverses x without popping it.
+		<td><code>"test"¿
+		<td><code>"test" "tset"
+      </tr>
+	  <tr>
+        <td><code>Å
+        <td>uniquify
+        <td>1
+		<td>x:[list|str]
+		<td>Returns x without repeated elements.
+		<td><code>[1 2 1 4 3 2]Å
+		<td><code>[1 2 4 3]
+      </tr>
+	  <tr>
+        <td><code>Ä
+        <td>deduplicate
+        <td>1
+		<td>x:[list|str]
+		<td>Deduplicates x.
+		<td><code>[1 2 1 4 4 3 2 2]Ä
+		<td><code>[1 2 1 4 3 2]
+      </tr>
+	  <tr>
+        <td><code>¥
+        <td>reverse
+        <td>1
+		<td>x:[list|str]
+		<td>Reverses x.
+		<td><code>"test"¥
+		<td><code>"tset"
+      </tr>
+	  <tr>
+        <td><code>Ø
+        <td>format string
+        <td>2
+		<td>[str] & [!list|str]
+		<td>[str] formatted with [!list|str] as the argument.
+		<td><code>"{}"5Ø
+		<td><code>"5"
+      </tr>
+	  <tr>
+        <td><code>Ø
+        <td>format string
+        <td>2
+		<td>[str] & [list]
+		<td>[str] formatted with the elements of [list] as the arguments.
+		<td><code>["a"3]"{}={}"Ø
+		<td><code>"a=3"
+      </tr>
+	  <tr>
+        <td><code>£
+        <td>random float
+        <td>1
+		<td>x:[float]
+		<td>Random float from [0,1) multiplied by x.
+		<td><code>2.5£
+		<td><code>1.5524295441661564
+      </tr>
+	  <tr>
+        <td><code>£
+        <td>random int
+        <td>1
+		<td>x:[int]
+		<td>Random int from [0,x).
+		<td><code>5£
+		<td><code>3
+      </tr>
+	  <tr>
+        <td><code>£
+        <td>shuffle
+        <td>1
+		<td>x:[list|str]
+		<td>x with elements shuffled.
+		<td><code>[1 2 3 4 5 6]£
+		<td><code>[5 6 2 1 4 3]
+      </tr>
+	  <tr>
+        <td><code>Ë
+        <td>transliterate
+        <td>3
+		<td>x:[list|str], y,z:[any]
+		<td>Replace elements of y with corresponding elements of z in x.
+		<td><code>"hello""lo"'yer
+		<td><code>"heyyy"
+      </tr>
+	  <tr>
+        <td><code>«
+        <td>min
+        <td>2
+		<td>x,y:[any]
+		<td>Returns x if x < y, otherwise y.
+		<td><code>5 4«
+		<td><code>4
+      </tr>
+	  <tr>
+        <td><code>»
+        <td>max
+        <td>2
+		<td>x,y:[any]
+		<td>Returns x if x > y, otherwise y.
+		<td><code>5 4»
+		<td><code>5
+      </tr>
+	  <tr>
+        <td><code>¸
+        <td>LCM
+        <td>2
+		<td>x,y:[num]
+		<td>LCM of x and y.
+		<td><code>3 4¸
+		<td><code>12
+      </tr>
+	  <tr>
+        <td><code>¦
+        <td>double
+        <td>1
+		<td>x:[num]
+		<td>Double x.
+		<td><code>4¦
+		<td><code>8
+      </tr>
+	  <tr>
+        <td><code>¦
+        <td>double
+        <td>1
+		<td>x:[list|str]
+		<td>Double x.
+		<td><code>[1 2 3]¦
+		<td><code>[1 2 3 1 2 3]
+      </tr>
+	  <tr>
+        <td><code>Ã
+        <td>read and evaluate line
+        <td>0
+		<td>
+		<td>Reads a line from STDIN and evaluates it.
+		<td>Input: <code>123 456<br>789</code>, Code: <code>Ã
+		<td><code>123 456
+      </tr>
+	  <tr>
+        <td><code>Â
+        <td>read and evaluate all
+        <td>0
+		<td>
+		<td>Reads the entirety of STDIN and evaluates it.
+		<td>Input: <code>123 456<br>789</code>, Code: <code>Â
+		<td><code>123 456 789
+      </tr>
   </table>
   
   <h2>Variables</h2>
