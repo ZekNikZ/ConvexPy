@@ -2,15 +2,11 @@ Misc Operators:
 
 m
 j - memoized recursion
-Ê - command line args (list)
-ê - command line args (separate)
 
 "Array" 2-char Operators:
 
-e followed by numeric literal - scientific notation
 e! - unique permutations
 e# - line comment (not really an operator)
-e% - string formatting a la printf
 e& - logical and
 e* - repeat each item in an array
 e< - min of 2 values
@@ -24,11 +20,8 @@ e` - RLE encode
 ea - command-line args
 ed - debug (show stack contents)
 ee - enumerate array
-el - lowercase
-er - transliteration (element replacement)
 es - timestamp (milliseconds from the epoch)
 et - local time
-eu - uppercase
 ew - overlapping slices
 e| - logical or
 e~ - RLE decode

@@ -1,16 +1,13 @@
-¡ - cumSum, factorial (gamma(n+1))
-
-fix popping from empty list
 finish regex
 full print mode (quaternion(1.0,0,0,0) -> "1+0i+0j+0k"), overload convert op
-array of size op (1 2 3 4 3 op -> 1 [2 3 4])
 dicts
 fold by division
 fold by subtraction
 discard first element
 discard last element
+rotate left
+rotate right
 parse, discard rest ("a12{34}\"t5\" -> [12 {34} "t5])
-all partitions ([1 2 3] -> [[[1] [2] [3]] [[1] [2 3]] [[1 2] [3]] [[1 2 3]]])
 prime index(5 -> 2) 0-indexed
 infinite precision maths
-goto & run line (have way to name lines)
+prefixes (T -> ["a" "ab" "abc"...]

@@ -7,8 +7,9 @@ mpmath.mp.dps = 10000
 last_op = 'N/A'
 safe_mode = False
 debug_mode = False
-CONVEX_VERSION = "0.6.3"
-
+CONVEX_VERSION = "0.6.5"
+args = []
+last_push = "\n"
 
 """
 ============
@@ -326,16 +327,26 @@ def is_regex(obj):
 
 
 def push(*items):
+    global last_push
     for x in items:
         if x is True:
             stack.append(1)
+            last_push = 1
         elif x is False:
             stack.append(0)
+            last_push = 0
         elif x is not None:
             stack.append(x)
+            last_push = x
 
 
 def pop():
+    if len(stack) == 0:
+        s = sys.stdin.readline()[:-1]
+        if len(s) == 0:
+            return last_push
+        else:
+            return get_args([s])[0]
     return stack.pop()
 
 
@@ -632,6 +643,17 @@ def find(list, sub):
 Convex Runner Functions
 =======================
 """
+
+
+def get_args(list, evaluate=True):
+    result = []
+    for arg in list:
+        if evaluate and (arg[0] in ('"', '{', '[') or re.match("^-?([0-9]+\.?[0-9]*|[0-9]*\.?[0-9]+)$", arg)):
+            run(arg)
+            result.append(pop())
+        else:
+            result.append(arg)
+    return result
 
 
 def split_code(code):
@@ -1284,8 +1306,8 @@ def vectorize(block):
 
 def op_fslash(x, y):
     if all_number(x, y):
-        if all_int(x, y):
-            return simplify(x // y)
+        # if all_int(x, y):
+        #    return simplify(x // y)
         return simplify(x / y)
     if is_block(x):
         if is_block(y):
@@ -1434,6 +1456,15 @@ def op_g(x):
 
 
 def op_h(x):
+    if is_number(x):
+        i = int(x)
+        if i >= 0:
+            return [pop() for _ in range(i)][::-1]
+        if i < 0:
+            return [stack.pop(0) for _ in range(-i)]
+    if is_list(x):
+        l = to_list(x)
+        return fix_list([sorted(i) for i in partitions(l)])
     if not is_block(x):
         raise InvalidOverloadError(x)
     while True:
@@ -1745,6 +1776,29 @@ def double(x):
     if is_number(x) or is_list(x):
         return simplify(x * 2)
     raise InvalidOverloadError(x)
+
+
+def partitions(collection):
+    if len(collection) == 1:
+        yield [collection]
+        return
+
+    first = collection[0]
+    for smaller in partitions(collection[1:]):
+        # insert `first` in each of the subpartition's subsets
+        for n, subset in enumerate(smaller):
+            yield smaller[:n] + [[first] + subset] + smaller[n+1:]
+        # put `first` in its own subset
+        yield [[first]] + smaller
+
+
+def floor_div(x):
+    if is_number(x):
+        if is_number(peek()):
+            return pop() // x
+    if is_list(x):
+        return quick_fold(x, '/')
+    raise InvalidOverloadError
 
 
 variables = {
@@ -2080,6 +2134,18 @@ operators = {
     'Â': attrdict(
         arity=0,
         call=lambda: run(sys.stdin.read()[:-1])
+    ),
+    'Ê': attrdict(
+        arity=0,
+        call=lambda: push(get_args(args))
+    ),
+    'ê': attrdict(
+        arity=0,
+        call=lambda: push(*get_args(args))
+    ),
+    '÷': attrdict(
+        arity=1,
+        call=floor_div
     )
 }
 
@@ -2128,20 +2194,24 @@ else:
                 print("Not enough arguments.\nFor help use the -help flag.")
                 break
             else:
-                file = open(sys.argv[index + 1])
+                push(*get_args(sys.argv[index+2:]))
+                args = sys.argv[index+2:]
+                file = open(sys.argv[index + 1], encoding='utf-8')
                 run(file.read(), True)
                 if debug_mode:
                     print("\nStack: ", to_string_repr(stack))
-                index += 2
+                break
         elif sys.argv[index] in ("-code", "-c"):
             if index + 1 == len(sys.argv):
                 print("Not enough arguments.\nFor help use the -help flag.")
                 break
             else:
+                push(*get_args(sys.argv[index + 2:]))
+                args = sys.argv[index + 2:]
                 run(sys.argv[index + 1], True)
                 if debug_mode:
                     print("\nStack: ", to_string_repr(stack))
-                index += 2
+                break
         elif sys.argv[index] in ("-shell", "-s"):
             while True:
                 stack = []
